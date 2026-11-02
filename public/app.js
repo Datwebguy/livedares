@@ -4,7 +4,7 @@
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
-  const COLORS = ['#ff7a45', '#ffc15a', '#3ee0a8', '#ff5a4a', '#ffd9a8', '#ff9d6e'];
+  const COLORS = ['#d6ff3f', '#9bf0c4', '#f4f6ee', '#ffd166', '#7ee0ff', '#b8f06a'];
   const colorFor = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 
   let current = null, prev = null, connected = false, shownKey = '';

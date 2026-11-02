@@ -1,9 +1,9 @@
-:root{--ink:#fff8ec;--ember:#ff3d2e;--amber:#ffb62e;--mint:#2fd9a0;--display:"Instrument Serif",Georgia,serif;--sans:"Figtree","Segoe UI",system-ui,sans-serif;--mono:"Figtree","Segoe UI",system-ui,sans-serif;--ease:cubic-bezier(.2,.8,.2,1)}
+:root{--ink:#f6f8ef;--ember:#ff6a5c;--amber:#d6ff3f;--mint:#d6ff3f;--display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--sans:"Manrope","Segoe UI",system-ui,sans-serif;--mono:"Manrope","Segoe UI",system-ui,sans-serif;--ease:cubic-bezier(.2,.8,.2,1)}
 *{box-sizing:border-box}
 /* 1rem = 16px at 1920 wide, so the overlay scales to any browser-source size */
 html{font-size:calc(100vw / 120)}
 html,body{margin:0;height:100%;background:transparent;overflow:hidden}
-body{color:var(--ink);font-family:var(--sans);font-weight:600;text-shadow:0 .1rem .9rem rgba(0,0,0,.65),0 .05rem .15rem rgba(0,0,0,.8)}
+body{color:var(--ink);font-family:var(--sans);font-weight:500;text-shadow:0 .1rem .9rem rgba(0,0,0,.65),0 .05rem .15rem rgba(0,0,0,.8)}
 #confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9}
 
 /* Lower third: no box, just a soft shade behind the words so they read over any video */
@@ -11,16 +11,16 @@ body{color:var(--ink);font-family:var(--sans);font-weight:600;text-shadow:0 .1re
 .ov-card.enter{animation:cardIn .8s var(--ease)}
 @keyframes cardIn{from{opacity:0;transform:translateX(-10rem)}}
 .ov-top{display:flex;align-items:flex-end;gap:2.4rem;margin-bottom:.9rem}
-.ov-tag{font:700 1.3rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--amber);padding-bottom:1rem}
+.ov-tag{font:600 1.3rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--amber);padding-bottom:1rem}
 .ov-clock{display:flex;align-items:baseline;gap:.9rem;margin-left:auto}
-.ov-clock strong{font:700 7rem/.9 var(--sans);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
-.ov-clock small{font:700 1.2rem var(--sans);letter-spacing:.06em;color:var(--amber)}
-.ov-card h1{margin:0;font:400 6.4rem/.96 var(--display);letter-spacing:-.015em;text-wrap:balance;overflow-wrap:anywhere;max-width:66rem}
-.ov-card p{margin:1.1rem 0 0;font-size:2rem;line-height:1.3;font-weight:700;overflow-wrap:anywhere;max-width:60rem;color:#f1e8d6}
+.ov-clock strong{font:500 6.2rem/.9 var(--display);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ov-clock small{font:600 1.2rem var(--sans);letter-spacing:.06em;color:var(--amber)}
+.ov-card h1{margin:0;font:500 5.4rem/1 var(--display);letter-spacing:-.03em;text-wrap:balance;overflow-wrap:anywhere;max-width:66rem}
+.ov-card p{margin:1.1rem 0 0;font-size:1.9rem;line-height:1.35;font-weight:500;overflow-wrap:anywhere;max-width:60rem;color:#f1e8d6}
 .ov-card p b{color:var(--amber)}
 .ov-fuse{height:.7rem;margin-top:1.8rem;border-radius:99rem;background:rgba(255,255,255,.2);overflow:hidden;max-width:66rem}
-.ov-fuse i{display:block;height:100%;width:100%;border-radius:99rem;background:linear-gradient(90deg,var(--amber),var(--ember));box-shadow:0 0 1.6rem rgba(255,90,40,.8)}
-.warn .ov-fuse i{background:var(--amber)}
+.ov-fuse i{display:block;height:100%;width:100%;border-radius:99rem;background:var(--amber);box-shadow:0 0 1.4rem rgba(214,255,63,.7)}
+.warn .ov-fuse i{background:#ffd166}
 .crit .ov-fuse i{background:var(--ember)}
 .crit .ov-clock strong{color:var(--ember);animation:pulse 1s steps(1) infinite}
 @keyframes pulse{50%{transform:scale(1.06)}}
@@ -33,16 +33,16 @@ body{color:var(--ink);font-family:var(--sans);font-weight:600;text-shadow:0 .1re
 
 .ov-board{position:absolute;top:0;right:0;width:34rem;padding:3rem 3.2rem 7rem 7rem;background:radial-gradient(ellipse 100% 100% at 100% 0%,rgba(8,6,4,.86) 0%,rgba(8,6,4,.62) 50%,transparent 98%);animation:boardIn .8s var(--ease) .2s both}
 @keyframes boardIn{from{opacity:0;transform:translateX(7rem)}}
-.ov-board-head{display:flex;align-items:center;gap:.9rem;margin-bottom:1.1rem;font:700 1.25rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
+.ov-board-head{display:flex;align-items:center;gap:.9rem;margin-bottom:1.1rem;font:600 1.25rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--amber)}
 .ov-board-head img{width:2.6rem;height:2.6rem}
 .ov-list{display:flex;flex-direction:column;gap:.2rem}
 .ov-row{display:grid;grid-template-columns:2.4rem minmax(0,1fr) auto;align-items:baseline;gap:.9rem;padding:.55rem 0;border-bottom:.08rem solid rgba(255,255,255,.2);animation:rowIn .5s var(--ease) both}
 @keyframes rowIn{from{opacity:0;transform:translateX(2rem)}}
-.ov-row .n{font:400 2.2rem var(--display);color:rgba(255,248,236,.6)}
+.ov-row .n{font:500 1.9rem var(--display);color:rgba(255,248,236,.6)}
 .ov-row:first-child .n,.ov-row:first-child b{color:var(--amber)}
 .ov-row:first-child strong{font-size:2rem}
 .ov-row.bump strong{color:var(--mint)}
-.ov-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.55rem;font-weight:800}
-.ov-row b{font:700 1.6rem var(--sans)}
+.ov-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.5rem;font-weight:600}
+.ov-row b{font:500 1.6rem var(--display)}
 .ov-row b small{font:800 .8rem var(--display);margin-left:.25rem;letter-spacing:.1em}
 .ov-board.hidden{display:none}
