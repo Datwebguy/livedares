@@ -124,6 +124,7 @@
       setHtml($('recent-list'), recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>');
       $('auto-start').checked = !!s.autoStart; $('start-most').disabled = !!c || !queue.length;
       $('overlay-theme').value = s.overlayTheme || 'midnight';
+      if (document.activeElement !== $('playing-input')) $('playing-input').value = s.manualPlaying || '';
       const board = $('leaderboard');
       setHtml(board, leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`);
     } else {
@@ -176,6 +177,14 @@
   });
   if ($('start-most')) $('start-most').addEventListener('click', () => api('/api/queue/start-most-voted').catch(err => toast(err.message)));
   if ($('auto-start')) $('auto-start').addEventListener('change', e => api('/api/queue/auto', { enabled: e.target.checked }).catch(err => toast(err.message)));
+  if ($('playing-form')) {
+    const savePlaying = async game => {
+      try { const result = await api('/api/playing', { game }); $('playing-input').value = result.game; toast(result.game ? 'Saved.' : 'Cleared.', true); }
+      catch (err) { toast(err.message); }
+    };
+    $('playing-form').addEventListener('submit', e => { e.preventDefault(); savePlaying($('playing-input').value); });
+    $('playing-clear').addEventListener('click', () => savePlaying(''));
+  }
   if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => api('/api/overlay/theme', { theme: e.target.value }).catch(err => toast(err.message)));
   if ($('suggest-form')) $('suggest-form').addEventListener('submit', async e => {
     e.preventDefault(); const button = e.currentTarget.querySelector('button'); button.disabled = true;

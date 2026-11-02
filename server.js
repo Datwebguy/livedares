@@ -10,20 +10,20 @@ const { createDirector, openAiGenerator, openAiModerator } = require('./lib/dire
 const { createChatHandler } = require('./lib/chat');
 const { createSuggestionHandler } = require('./lib/suggest');
 const { createAutoStart } = require('./lib/auto-start');
-const { createTwitchContext } = require('./lib/twitch-context');
+const { createTwitchContext, choosePlaying } = require('./lib/twitch-context');
 const { createClientIp } = require('./lib/client-ip');
 const { createPageVotes } = require('./lib/page-votes');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
 const twitchContext = createTwitchContext({ clientId: process.env.TWITCH_CLIENT_ID, clientSecret: process.env.TWITCH_CLIENT_SECRET, channel });
-const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null, moderate: process.env.OPENAI_API_KEY ? openAiModerator(process.env.OPENAI_API_KEY) : null, getContext: () => twitchContext.get() });
+const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null, moderate: process.env.OPENAI_API_KEY ? openAiModerator(process.env.OPENAI_API_KEY) : null, getContext: async () => choosePlaying(await twitchContext.get(), store.getManualPlaying()) });
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 let playing = null;
-const publicState = () => ({ ...store.state(), playing });
+const publicState = () => ({ ...store.state(), playing: choosePlaying(playing, store.getManualPlaying()) });
 let auto;
 const broadcast = () => { io.emit('state', publicState()); auto?.schedule(); };
 auto = createAutoStart({ store, onChange: broadcast });
@@ -69,6 +69,11 @@ app.post('/api/queue/:id/start', (req, res) => {
 app.post('/api/queue/:id/remove', (req, res) => {
   if (!store.removeQueued(req.params.id)) return res.status(404).json({ error: 'Queued challenge not found.' });
   broadcast(); res.json({ ok: true });
+});
+app.post('/api/playing', (req, res) => {
+  const saved = store.setManualPlaying(req.body?.game);
+  if (saved === null) return res.status(400).json({ error: 'Enter a game name of up to 60 characters.' });
+  broadcast(); res.json({ game: saved });
 });
 app.post('/api/overlay/theme', (req, res) => {
   if (!store.setTheme(req.body?.theme)) return res.status(400).json({ error: 'Unknown theme.' });

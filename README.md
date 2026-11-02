@@ -87,7 +87,12 @@ Viewers can use `!vote 1`, `!vote 2`, or `!vote 3` to vote for a position in the
 
 OpenAI moderation checks each idea before generation. If moderation is unavailable, the existing generation safety check still applies. If both optional `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` are configured, the app uses Twitch's app access flow to add the live game's name and stream title as untrusted context. [Register a Twitch application](https://dev.twitch.tv/console/apps) to obtain those two values. The feature remains off if either is missing.
 
+
+The dashboard’s **What are you playing?** field saves an optional game name for the dare generator and overlay. Clear removes it. A live Twitch game takes priority when available; otherwise the saved name is used.
+
 ## What is verified
+
+- The manual game field is covered by automated tests for cleaning, validation, clearing, restart persistence, Twitch priority and generator context. Chromium at 360 and 1366 pixels checked saving, reload, clearing, overlay updates, both display themes and horizontal overflow using a local server. Real Twitch game-priority behavior has not been tested with live credentials.
 
 The HTTP tests cover direct and forwarded address handling, vote replacement, separation from chat votes, persistence, removal and stored-address checks. Chromium checks at 360 and 1366 pixels used a local injected generator to submit an idea, vote, move the vote, reload, switch themes and check the overlay. Real proxy-header behavior and the voting flow still need a live multi-visitor Railway rehearsal.
 
