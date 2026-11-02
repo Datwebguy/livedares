@@ -203,7 +203,13 @@ test/                  Automated tests
 
 ## Built with OpenAI Codex
 
-LiveDares was built with **OpenAI Codex**: the Node server, the Twitch chat bot, the OpenAI integration, the dashboard, the OBS overlay and the automated tests were written and revised in Codex, then tested live in the owner's Twitch channel.
+We used **OpenAI Codex** throughout the build:
+
+- connecting Twitch chat to the challenge flow;
+- building the live dashboard and the OBS overlay;
+- adding the challenge queue and voting;
+- investigating errors and writing the automated tests;
+- refining the experience as we tested it live on Twitch.
 
 ## Credits
 
