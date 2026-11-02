@@ -89,8 +89,16 @@ OpenAI moderation checks each idea before generation. If moderation is unavailab
 
 ## What is verified
 
+The HTTP tests cover direct and forwarded address handling, vote replacement, separation from chat votes, persistence, removal and stored-address checks. Chromium checks at 360 and 1366 pixels used a local injected generator to submit an idea, vote, move the vote, reload, switch themes and check the overlay. Real proxy-header behavior and the voting flow still need a live multi-visitor Railway rehearsal.
+
 - Automated tests cover the existing challenge flow, page input and cooldown, voting and persistence, automatic start, optional Twitch context using injected responses, moderation using injected responses, chat summaries and result values. Run `npm test` with Node 20.
 - Chromium was used at 360 and 1366 pixels to check the dashboard and overlay, the theme toggle, horizontal overflow, and page errors. With no local OpenAI key, the page form’s unavailable-service message was checked. A separate isolated browser test used injected generation and chat calls to exercise suggestion, voting, overlay updates and scoring at both widths; it did not call the real services.
 - Earlier in this project, a real Twitch chat message produced a dare through OpenAI. The newer page suggestion, votes, moderation, game context, and result overlay have not yet been verified end to end against real Twitch, OpenAI and OBS. Real game-context testing requires the optional Twitch application credentials.
 
 Additional modules: `lib/suggest.js` validates page submissions, `lib/auto-start.js` schedules the next dare, and `lib/twitch-context.js` fetches optional game context. `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` are optional; see `.env.example` for all configuration.
+
+## Page votes and proxy settings
+
+Select **Vote** beside a waiting dare. Selecting another moves the vote; **Voted** stays visible after a reload. Page votes and chat votes count together. The server stores a salted one-way identifier for each page voter, not their address. People sharing an internet connection may share a page vote and rate limit.
+
+Railway deployments use its documented `X-Real-IP` header and the automatically supplied service identity. Local deployments ignore forwarded headers by default. If running behind a different trusted reverse proxy, set the optional `TRUST_PROXY` to the number of trusted proxy hops; use `0` for direct connections. Only set this when those proxies are under your control: an incorrect hop count can let visitors forge their address. Railway's documentation identifies the client-address header and describes its edge proxy, but does not specify a general fixed hop count for every configuration. See [public networking specifications](https://docs.railway.com/networking/public-networking/specs-and-limits) and [edge networking](https://docs.railway.com/networking/edge-networking).

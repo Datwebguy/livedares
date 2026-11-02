@@ -11,6 +11,7 @@ const { createSuggestionHandler } = require('./lib/suggest');
 const { createAutoStart } = require('./lib/auto-start');
 const { createTwitchContext } = require('./lib/twitch-context');
 const { createClientIp } = require('./lib/client-ip');
+const { createPageVotes } = require('./lib/page-votes');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
@@ -40,6 +41,9 @@ app.get('/overlay', (_req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 app.get('/api/state', (_req, res) => res.json(publicState()));
 
+const pageVotes = createPageVotes({ store, clientIp, onChange: broadcast });
+app.get('/api/my-vote', pageVotes.get);
+app.post('/api/queue/:id/vote', pageVotes.post);
 app.post('/api/suggest', createSuggestionHandler({ director, clientIp }));
 app.post('/api/challenge/:action', (req, res) => {
   if (!['done', 'fail', 'clear'].includes(req.params.action)) return res.status(404).json({ error: 'Unknown action.' });

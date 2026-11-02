@@ -7,7 +7,7 @@
   const COLORS = ['#d6ff3f', '#9bf0c4', '#f4f6ee', '#ffd166', '#7ee0ff', '#b8f06a'];
   const colorFor = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 
-  let current = null, prev = null, connected = false, shownKey = '', resultTimer;
+  let current = null, prev = null, connected = false, shownKey = '', resultTimer, myVote = null;
   const lastPoints = {};
   const isOverlay = document.body.classList.contains('overlay-page');
 
@@ -81,6 +81,7 @@
     prev = current; current = s;
     const c = s.challenge, leaders = s.leaderboard || [];
     const prevC = prev && prev.challenge;
+    if (!isOverlay && myVote && !(s.queue || []).some(q => q.id === myVote)) myVote = null;
 
     // A challenge that just ended: celebrate if its creator was awarded points.
     if (isOverlay && prevC && !c && s.lastResult?.id === prevC.id) {
@@ -119,7 +120,7 @@
       }
       const queue = s.queue || [], recent = s.recent || [];
       $('queue-count').textContent = `${queue.length} waiting`;
-      setHtml($('queue-list'), queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s · ${q.votes || 0} votes</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>');
+      setHtml($('queue-list'), queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s · ${q.votes || 0} ${(q.votes || 0) === 1 ? 'vote' : 'votes'}</small></div><div class="row-actions"><button data-vote="${q.id}" ${myVote === q.id ? 'aria-pressed="true"' : 'aria-pressed="false"'}>${myVote === q.id ? 'Voted' : 'Vote'}</button><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>');
       setHtml($('recent-list'), recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>');
       $('auto-start').checked = !!s.autoStart; $('start-most').disabled = !!c || !queue.length;
       $('overlay-theme').value = s.overlayTheme || 'midnight';
@@ -141,7 +142,7 @@
       }
       const next = (s.queue || []).slice(0, 3), nextEl = $('ov-next'); nextEl.hidden = next.length < 2;
       const maxVotes = Math.max(1, ...next.map(q => q.votes || 0));
-      setHtml($('ov-votes'), next.map((q, i) => `<div class="ov-vote"><span>${i + 1}. ${esc(q.title)}</span><b>${q.votes || 0}</b><i style="width:${((q.votes || 0) / maxVotes * 100).toFixed(0)}%"></i></div>`).join(''));
+      setHtml($('ov-votes'), next.map((q, i) => `<div class="ov-vote"><span>${i + 1}. ${esc(q.title)}</span><b>${q.votes || 0} ${(q.votes || 0) === 1 ? 'vote' : 'votes'}</b><i style="width:${((q.votes || 0) / maxVotes * 100).toFixed(0)}%"></i></div>`).join(''));
       $('ov-board').classList.toggle('hidden', !leaders.length);
       setHtml($('overlay-leaderboard'), leaderHtml(leaders, true));
     }
@@ -150,7 +151,8 @@
     tick();
   }
 
-  socket.on('connect', () => { connected = true; if (current) render(current); });
+  async function refreshVote() { try { const r = await fetch('/api/my-vote', { cache: 'no-store' }); if (r.ok) { myVote = (await r.json()).challengeId; if (current) render(current); } } catch {} }
+  socket.on('connect', () => { connected = true; if (current) render(current); if (!isOverlay) refreshVote(); });
   socket.on('disconnect', () => { connected = false; if (current) render(current); });
   socket.on('state', render);
   setInterval(tick, 100);
@@ -166,7 +168,8 @@
     });
   }
   if ($('queue-list')) $('queue-list').addEventListener('click', e => {
-    const start = e.target.closest('[data-start]'), remove = e.target.closest('[data-remove]');
+    const start = e.target.closest('[data-start]'), remove = e.target.closest('[data-remove]'), vote = e.target.closest('[data-vote]');
+    if (vote) { vote.disabled = true; api(`/api/queue/${vote.dataset.vote}/vote`).then(data => { myVote = data.challengeId; if (current) render(current); }).catch(err => toast(err.message)).finally(() => { vote.disabled = false; }); return; }
     const run = path => api(path).catch(err => toast(err.message));
     if (start) run(`/api/queue/${start.dataset.start}/start`);
     if (remove) run(`/api/queue/${remove.dataset.remove}/remove`);
