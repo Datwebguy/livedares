@@ -1,5 +1,4 @@
 require('dotenv').config();
-const crypto = require('crypto');
 const express = require('express');
 const http = require('http');
 const path = require('path');
@@ -11,13 +10,12 @@ const { createChatHandler } = require('./lib/chat');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
-const adminToken = process.env.ADMIN_TOKEN || '';
 const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null });
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const publicState = () => ({ ...store.state(), adminRequired: Boolean(adminToken) });
+const publicState = () => store.state();
 const broadcast = () => io.emit('state', publicState());
 store.onChange = broadcast;
 
@@ -26,34 +24,25 @@ app.use((_req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'R
 app.use(express.json({ limit: '4kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
-// When ADMIN_TOKEN is set, anything that changes the show needs it. Without it the app behaves as before.
-function requireAdmin(req, res, next) {
-  if (!adminToken) return next();
-  const given = Buffer.from(String(req.get('x-admin-token') || ''));
-  const wanted = Buffer.from(adminToken);
-  if (given.length === wanted.length && crypto.timingSafeEqual(given, wanted)) return next();
-  res.status(401).json({ error: 'Enter the streamer password to do that.' });
-}
-
 app.get('/overlay', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'overlay.html')));
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 app.get('/api/state', (_req, res) => res.json(publicState()));
 
-app.post('/api/challenge/:action', requireAdmin, (req, res) => {
+app.post('/api/challenge/:action', (req, res) => {
   if (!['done', 'fail', 'clear'].includes(req.params.action)) return res.status(404).json({ error: 'Unknown action.' });
   if (!store.resolve(req.params.action)) return res.status(409).json({ error: 'There is no active challenge.' });
   broadcast(); res.json({ ok: true });
 });
-app.post('/api/queue/:id/start', requireAdmin, (req, res) => {
+app.post('/api/queue/:id/start', (req, res) => {
   const error = store.startQueued(req.params.id);
   if (error) return res.status(409).json({ error });
   broadcast(); res.json({ ok: true });
 });
-app.post('/api/queue/:id/remove', requireAdmin, (req, res) => {
+app.post('/api/queue/:id/remove', (req, res) => {
   if (!store.removeQueued(req.params.id)) return res.status(404).json({ error: 'Queued challenge not found.' });
   broadcast(); res.json({ ok: true });
 });
-app.post('/api/overlay/theme', requireAdmin, (req, res) => {
+app.post('/api/overlay/theme', (req, res) => {
   if (!store.setTheme(req.body?.theme)) return res.status(400).json({ error: 'Unknown theme.' });
   broadcast(); res.json({ ok: true });
 });

@@ -69,10 +69,6 @@ Show chat and the dashboard together. Ask a viewer for an idea, point out the AI
 
 The flowing background clip is a free stock video from [Mixkit](https://mixkit.co/free-stock-video/abstract-red-fabric-flowing-282/), used under the [Mixkit License](https://mixkit.co/license/#videoFree).
 
-## Protect the dashboard (recommended when deployed)
-
-Set `ADMIN_TOKEN` to a password only you know. Anyone can still open the dashboard and the overlay, but marking a dare done, starting or removing queued dares and changing the overlay theme need the password. The dashboard asks for it once and remembers it in your browser. If `ADMIN_TOKEN` is not set, the buttons stay open as before, so only run it that way on a trusted network.
-
 ## Project layout and tests
 
 - `server.js` wires the web server, live updates and Twitch chat together.
@@ -81,4 +77,4 @@ Set `ADMIN_TOKEN` to a password only you know. Anyone can still open the dashboa
 - `lib/chat.js` reads chat commands and decides who may use them.
 - `GET /healthz` answers `{ "ok": true }` for deploy health checks.
 
-Run `npm test`. It checks scoring, the queue order, cooldowns, unsafe or malformed AI answers, who may use chat commands, the dashboard password, restarts and clean shutdown.
+Run `npm test`. It checks scoring, the queue order, cooldowns, unsafe or malformed AI answers, who may use chat commands, restarts and clean shutdown.

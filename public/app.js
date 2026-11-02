@@ -38,20 +38,13 @@
   // Only touch the page when the markup really changed, so lists do not flicker or replay their animations.
   const memo = new WeakMap();
   function setHtml(el, html) { if (!el || memo.get(el) === html) return; memo.set(el, html); el.innerHTML = html; }
-  let adminToken = ''; try { adminToken = localStorage.getItem('adminToken') || ''; } catch {}
-  // One way to change the show. If the streamer set a password, ask for it once and remember it.
-  async function api(path, body, retry = true) {
+  // One way to change the show: send the request, and turn any failure into a plain message.
+  async function api(path, body) {
     let res;
-    try { res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(adminToken ? { 'x-admin-token': adminToken } : {}) }, body: JSON.stringify(body || {}) }); }
+    try { res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); }
     catch { throw Error('Could not reach the server. Check your connection.'); }
     const data = await res.json().catch(() => ({}));
-    if (res.status === 401 && retry) {
-      const given = window.prompt('Enter your streamer password');
-      if (!given) throw Error('That needs your streamer password.');
-      adminToken = given.trim(); try { localStorage.setItem('adminToken', adminToken); } catch {}
-      return api(path, body, false);
-    }
-    if (!res.ok) { if (res.status === 401) { adminToken = ''; try { localStorage.removeItem('adminToken'); } catch {} } throw Error(data.error || 'Something went wrong.'); }
+    if (!res.ok) throw Error(data.error || 'Something went wrong.');
     return data;
   }
 
