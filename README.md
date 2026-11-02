@@ -1,6 +1,6 @@
-# AI Challenge Director
+# LiveDares
 
-A Twitch chat-powered challenge director for streamers. Viewers submit ideas, GPT-4o-mini turns them into short, safety-screened challenges, and the broadcaster or moderators decide the outcome. The dashboard and OBS overlay update live. Completed challenges award **100 points to the viewer who suggested them**. Challenges and scores persist in SQLite.
+LiveDares is a Twitch chat-powered dare machine for streamers. Viewers submit ideas, GPT-4o-mini turns them into short, safety-screened challenges, and the broadcaster or moderators decide the outcome. The dashboard and OBS overlay update live. Completed challenges award **100 points to the viewer who suggested them**. Challenges and scores persist in SQLite.
 
 ## Requirements
 

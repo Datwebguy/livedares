@@ -3,30 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Challenge Director · OBS Overlay</title>
+<title>LiveDares · Overlay</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@500;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Mono:wght@700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/overlay.css">
 </head>
 <body class="overlay-page">
 <canvas id="confetti" aria-hidden="true"></canvas>
 
 <aside class="ov-board" id="ov-board" aria-label="Leaderboard">
-  <div class="ov-board-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span>Leaderboard</span></div>
+  <div class="ov-board-head"><span class="rec"></span><span>Top dare-givers</span></div>
   <div id="overlay-leaderboard" class="ov-list"></div>
 </aside>
 
 <section class="ov-card" id="ov-card" data-state="idle">
-  <div class="ov-ring" id="ov-ring">
-    <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="88"/><circle class="arc" id="ov-arc" cx="100" cy="100" r="88"/></svg>
-    <div class="ov-time"><strong id="overlay-time">--:--</strong><small id="overlay-timer-label">Waiting</small></div>
-  </div>
-  <div class="ov-copy">
+  <div class="ov-top">
     <span class="ov-tag" id="overlay-meta">Chat is in control</span>
-    <h1 id="overlay-title">Waiting for chat</h1>
-    <p id="overlay-description">Type <b>!challenge</b> and your idea.</p>
+    <div class="ov-clock" id="ov-ring"><strong id="overlay-time">--:--</strong><small id="overlay-timer-label">Waiting</small></div>
   </div>
+  <h1 id="overlay-title">Waiting for chat</h1>
+  <p id="overlay-description">Type <b>!challenge</b> and your idea.</p>
+  <div class="ov-fuse"><i id="ov-arc"></i></div>
 </section>
 
 <script src="/socket.io/socket.io.js"></script>

@@ -1,11 +1,10 @@
 (() => {
   const socket = io();
   const $ = id => document.getElementById(id);
-  const CIRC = 553; // circumference of the timer ring (r = 88)
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const esc = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   const clock = ms => { const s = Math.max(0, Math.ceil(ms / 1000)); return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`; };
-  const COLORS = ['#d6ff3f', '#7dff9a', '#8b6bff', '#ff4fa3', '#ffb23f', '#5ad1ff'];
+  const COLORS = ['#ff3d2e', '#ffcf33', '#2fd9a0', '#3aa8ff', '#ff8a2e', '#121212'];
   const colorFor = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 
   let current = null, prev = null, connected = false, shownKey = '';
@@ -43,15 +42,16 @@
     const set = (ring, arc, time, label) => {
       if (!ring) return;
       ring.classList.toggle('over', over); ring.classList.toggle('crit', crit); ring.classList.toggle('warn', warn);
-      if (arc) arc.style.strokeDashoffset = String(CIRC * (1 - frac));
+      if (arc) arc.style.width = (frac * 100).toFixed(2) + '%';
       if (time) time.textContent = over ? '00:00' : clock(left);
-      if (label) label.textContent = over ? 'Time is up' : 'Remaining';
+      if (label) label.textContent = over ? 'Time is up' : 'Left';
     };
     set($('ring'), $('arc'), $('timer'), $('timer-label'));
     set($('ov-ring'), $('ov-arc'), $('overlay-time'), $('overlay-timer-label'));
+    const ovc = $('ov-card'); if (ovc) { ovc.classList.toggle('warn', warn); ovc.classList.toggle('crit', crit); }
     const card = $('ov-card'); if (card) card.dataset.state = over ? 'over' : 'live';
     const pill = $('challenge-status');
-    if (pill && !isOverlay) { pill.className = 'pill ' + (over ? 'over' : 'active'); pill.querySelector('b').textContent = over ? 'Time is up' : 'Live now'; }
+    if (pill && !isOverlay) { pill.className = 'pill ' + (over ? 'over' : 'active'); pill.querySelector('b').textContent = over ? 'Time is up' : 'Live'; }
   }
 
   /* ---------- Leaderboard ---------- */
@@ -59,7 +59,7 @@
     const bumped = u => lastPoints[u.username] !== undefined && u.points > lastPoints[u.username];
     if (overlay) return leaders.slice(0, 5).map((u, i) => `<div class="ov-row${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 70}ms"><span class="n">${i + 1}</span><strong>${esc(u.username)}</strong><b>${u.points}<small>PTS</small></b></div>`).join('');
     const cls = ['first', 'second', 'third'];
-    return leaders.slice(0, 8).map((u, i) => `<div class="lrow ${cls[i] || ''}${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 60}ms"><span class="rk">${i + 1}</span><span class="av" style="background:${colorFor(u.username)}">${esc(u.username.charAt(0).toUpperCase())}</span><div class="who"><strong>${esc(u.username)}</strong><small>${u.wins} ${u.wins === 1 ? 'challenge' : 'challenges'} completed</small></div><div class="pts">${u.points}<small>POINTS</small></div></div>`).join('');
+    return leaders.slice(0, 8).map((u, i) => `<div class="lrow ${cls[i] || ''}${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 60}ms"><span class="rk">${i + 1}</span><span class="av" style="background:${colorFor(u.username)}">${esc(u.username.charAt(0).toUpperCase())}</span><div class="who"><strong>${esc(u.username)}</strong><small>${u.wins} ${u.wins === 1 ? 'dare' : 'dares'} done</small></div><div class="pts">${u.points}<small>POINTS</small></div></div>`).join('');
   }
 
   /* ---------- Render ---------- */
@@ -72,7 +72,7 @@
     if (prevC && !c) {
       const before = (prev.leaderboard || []).reduce((n, u) => n + u.points, 0), after = leaders.reduce((n, u) => n + u.points, 0);
       if (after > before) { burst(); if (!isOverlay) toast(`+${after - before} points for @${prevC.suggested_by}`, true); }
-      else if (!isOverlay) toast('Challenge closed');
+      else if (!isOverlay) toast('Dare closed');
     }
 
     if (!isOverlay) {
@@ -87,17 +87,17 @@
         shownKey = key;
         const pill = $('challenge-status');
         if (c) {
-          $('challenge-body').innerHTML = `<div class="running"><div class="copy"><span class="from">Chat's pick · @${esc(c.suggested_by)}</span><h3>${esc(c.title)}</h3><p>${esc(c.description)}</p></div><div class="ring" id="ring"><svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="88"/><circle class="arc" id="arc" cx="100" cy="100" r="88"/></svg><div class="t"><strong id="timer">--:--</strong><small id="timer-label">Remaining</small></div></div></div>`;
+          $('challenge-body').innerHTML = `<div class="running" id="ring"><span class="from">Chat's pick · @${esc(c.suggested_by)}</span><h3>${esc(c.title)}</h3><p>${esc(c.description)}</p><div class="clock"><strong id="timer">--:--</strong><small id="timer-label">Left</small></div><div class="fuse"><i id="arc"></i></div></div>`;
         } else if (s.generating) {
           pill.className = 'pill working'; pill.querySelector('b').textContent = 'Creating';
-          $('challenge-body').innerHTML = `<div class="empty"><div class="orb work"><span><svg viewBox="0 0 32 32"><path d="M16 5l2.8 8.2L27 16l-8.2 2.8L16 27l-2.8-8.2L5 16l8.2-2.8z"/></svg></span></div><div><h3>Shaping a challenge</h3><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><div class="dial work"></div><div><h3>Making a dare</h3><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
         } else {
           pill.className = 'pill'; pill.querySelector('b').textContent = 'Waiting';
-          $('challenge-body').innerHTML = `<div class="empty"><div class="orb"><span><svg viewBox="0 0 32 32"><path d="M16 5l2.8 8.2L27 16l-8.2 2.8L16 27l-2.8-8.2L5 16l8.2-2.8z"/></svg></span></div><div><h3>Ready when chat is.</h3><p>No challenge is running. The next one starts the moment a viewer suggests it.</p><span class="hint">Chat types <code>!challenge &lt;idea&gt;</code></span></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><div class="dial"></div><div><h3>Waiting on chat</h3><p>No dare is running. The next one starts the moment a viewer suggests it.</p><span class="hint">Chat types <code>!challenge &lt;idea&gt;</code></span></div></div>`;
         }
       }
       const board = $('leaderboard');
-      board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><span class="e-ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 9.5l-4.3 3.8L17 19l-5-3-5 3 1.3-5.7L4 9.5l5.6-.9z"/></svg></span><strong>No points yet</strong><p>Mark a challenge done and its creator takes first place.</p></div>`;
+      board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><span class="e-ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 9.5l-4.3 3.8L17 19l-5-3-5 3 1.3-5.7L4 9.5l5.6-.9z"/></svg></span><strong>No points yet</strong><p>Mark a dare done and the viewer who suggested it takes first place.</p></div>`;
     } else {
       const card = $('ov-card'), key = c ? 'c' + c.id : s.generating ? 'gen' : 'idle';
       if (key !== shownKey) {
@@ -106,7 +106,7 @@
           card.dataset.state = 'live'; $('overlay-title').textContent = c.title; $('overlay-description').textContent = c.description; $('overlay-meta').textContent = `Suggested by @${c.suggested_by}`;
         } else {
           card.dataset.state = s.generating ? 'working' : 'idle';
-          $('overlay-title').textContent = 'Making a challenge'; $('overlay-description').innerHTML = s.generating ? 'Shaping the next challenge…' : 'Type <b>!challenge</b> and your idea.'; $('overlay-meta').textContent = 'Chat is in control';
+          $('overlay-title').textContent = 'Making a dare'; $('overlay-description').innerHTML = s.generating ? 'Turning chat\'s idea into a dare…' : 'Type <b>!challenge</b> and your idea.'; $('overlay-meta').textContent = 'Chat is in control';
         }
         card.classList.remove('enter'); void card.offsetWidth; card.classList.add('enter');
       }

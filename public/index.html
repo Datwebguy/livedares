@@ -3,59 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0a0a10">
-<title>AI Challenge Director</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23d6ff3f'/%3E%3Cpath d='M16 6l2.6 7.4L26 16l-7.4 2.6L16 26l-2.6-7.4L6 16l7.4-2.6z' fill='%230a0a10'/%3E%3C/svg%3E">
+<meta name="theme-color" content="#f2ecdf">
+<title>LiveDares</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23121212'/%3E%3Ccircle cx='16' cy='16' r='7' fill='%23ff3d2e'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=IBM+Plex+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="bg" aria-hidden="true"><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="grid-lines"></i></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
+<div class="ticker" aria-hidden="true"><div class="ticker-track">
+  <span>!challenge <u>your idea</u></span><i></i><span>!done</span><i></i><span>!fail</span><i></i><span>!clear</span><i></i>
+  <span>!challenge <u>your idea</u></span><i></i><span>!done</span><i></i><span>!fail</span><i></i><span>!clear</span><i></i>
+  <span>!challenge <u>your idea</u></span><i></i><span>!done</span><i></i><span>!fail</span><i></i><span>!clear</span><i></i>
+  <span>!challenge <u>your idea</u></span><i></i><span>!done</span><i></i><span>!fail</span><i></i><span>!clear</span><i></i>
+</div></div>
+
 <header class="top">
-  <a class="brand" href="/" aria-label="AI Challenge Director">
-    <span class="logo"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 5l2.8 8.2L27 16l-8.2 2.8L16 27l-2.8-8.2L5 16l8.2-2.8z"/></svg></span>
-    <span class="brand-text">Challenge<b>Director</b></span>
-  </a>
+  <a class="brand" href="/" aria-label="LiveDares"><span class="rec"></span><span class="word">Live<b>Dares</b></span></a>
   <div class="top-right">
-    <div class="conn" id="connection" role="status">
-      <i></i><span id="connection-title">Connecting</span><small id="connection-detail"></small>
-    </div>
+    <div class="conn" id="connection" role="status"><i></i><span id="connection-title">Connecting</span><small id="connection-detail"></small></div>
     <a class="btn ghost small" href="/overlay" target="_blank" rel="noopener">Stream overlay <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 17L17 7M9 7h8v8"/></svg></a>
   </div>
 </header>
 
 <main class="wrap">
   <section class="hero">
-    <p class="eyebrow"><span class="dot"></span> Live control room</p>
-    <h1>Let chat <em>call the shots</em><span class="stop">.</span></h1>
-    <p class="lede">Viewers pitch an idea. It becomes a short challenge. You decide how it ends, and the viewer who thought of it earns the points.</p>
+    <h1>Chat dares.<br><span>You do it.</span></h1>
+    <p class="lede">A viewer types an idea in chat. It turns into a short, timed dare. You do it live, mark how it went, and the viewer who thought of it earns points.</p>
     <div class="cmd">
       <span class="cmd-label">Tell your chat</span>
-      <code id="cmd-text">!challenge &lt;your idea&gt;</code>
-      <button class="icon-btn" id="copy" type="button" aria-label="Copy chat command">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"/></svg>
-        <span id="copy-text">Copy</span>
-      </button>
+      <code>!challenge &lt;your idea&gt;</code>
+      <button class="icon-btn" id="copy" type="button" aria-label="Copy chat command"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2.5"/><path d="M5 15V6.5A1.5 1.5 0 0 1 6.5 5H15"/></svg><span id="copy-text">Copy</span></button>
     </div>
   </section>
 
   <div class="layout">
     <section class="card stage" id="stage" aria-live="polite">
       <div class="card-head">
-        <div><span class="label">On deck</span><h2>Current challenge</h2></div>
+        <div><span class="label">On deck</span><h2>Current dare</h2></div>
         <span class="pill" id="challenge-status"><i></i><b>Waiting</b></span>
       </div>
       <div class="stage-body" id="challenge-body"></div>
       <div class="controls">
-        <span class="label">Streamer controls</span>
+        <span class="label">How did it go?</span>
         <div class="buttons">
-          <button class="btn done" id="done" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Mark done</button>
-          <button class="btn fail" id="fail" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Mark failed</button>
-          <button class="btn ghost" id="clear" disabled>Clear</button>
+          <button class="btn done" id="done" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>Done</button>
+          <button class="btn fail" id="fail" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>Failed</button>
+          <button class="btn ghost" id="clear" disabled>Skip it</button>
         </div>
       </div>
     </section>
@@ -63,20 +60,12 @@
     <aside class="card board" aria-label="Leaderboard">
       <div class="card-head">
         <div><span class="label">The community</span><h2>Leaderboard</h2></div>
-        <span class="crown" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg></span>
       </div>
       <div id="leaderboard" class="board-list"></div>
-      <p class="board-foot">100 points for every challenge you mark done.</p>
     </aside>
   </div>
 
-  <section class="steps" aria-label="How it works">
-    <article class="step"><span class="num">1</span><h3>Chat suggests</h3><p>Anyone types <code>!challenge</code> with an idea. One challenge runs at a time.</p></article>
-    <article class="step"><span class="num">2</span><h3>It becomes a challenge</h3><p>The idea is checked for safety and turned into a short challenge with its own countdown.</p></article>
-    <article class="step"><span class="num">3</span><h3>You decide</h3><p>Done, failed or cleared, from here or with <code>!done</code> <code>!fail</code> <code>!clear</code> in chat.</p></article>
-  </section>
-
-  <footer class="foot"><span>AI Challenge Director</span><span>Built for TwitchCon x Codex</span></footer>
+  <footer class="foot"><span class="word small">Live<b>Dares</b></span></footer>
 </main>
 
 <div id="toast" role="status"></div>
