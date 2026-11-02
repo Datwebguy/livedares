@@ -59,7 +59,7 @@
     const bumped = u => lastPoints[u.username] !== undefined && u.points > lastPoints[u.username];
     if (overlay) return leaders.slice(0, 5).map((u, i) => `<div class="ov-row${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 70}ms"><span class="n">${i + 1}</span><strong>${esc(u.username)}</strong><b>${u.points}<small>PTS</small></b></div>`).join('');
     const cls = ['first', 'second', 'third'];
-    return leaders.slice(0, 8).map((u, i) => `<div class="lrow ${cls[i] || ''}${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 60}ms"><span class="rk">${i + 1}</span><span class="av" style="background:${colorFor(u.username)}">${esc(u.username.charAt(0).toUpperCase())}</span><div class="who"><strong>${esc(u.username)}</strong><small>${u.wins} ${u.wins === 1 ? 'dare' : 'dares'} done</small></div><div class="pts">${u.points}<small>points</small></div></div>`).join('');
+    return leaders.slice(0, 5).map((u, i) => `<div class="lrow ${cls[i] || ''}${bumped(u) ? ' bump' : ''}" style="animation-delay:${i * 60}ms"><span class="rk">${i + 1}</span><span class="av" style="background:${colorFor(u.username)}">${esc(u.username.charAt(0).toUpperCase())}</span><div class="who"><strong>${esc(u.username)}</strong><small>${u.last_challenge ? 'Last: ' + esc(u.last_challenge) : `${u.wins} ${u.wins === 1 ? 'dare' : 'dares'} done`}</small></div><div class="pts">${u.points}<small>points</small></div></div>`).join('');
   }
 
   /* ---------- Render ---------- */
@@ -96,9 +96,15 @@
           $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h3>Waiting for chat's next idea.</h3><p>As soon as a viewer suggests something, it shows up here with a countdown.</p></div></div>`;
         }
       }
+      const queue = s.queue || [], recent = s.recent || [];
+      $('queue-count').textContent = `${queue.length} waiting`;
+      $('queue-list').innerHTML = queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>';
+      $('recent-list').innerHTML = recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>';
+      $('overlay-theme').value = s.overlayTheme || 'midnight';
       const board = $('leaderboard');
       board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`;
     } else {
+      document.documentElement.dataset.overlayTheme = s.overlayTheme || 'midnight';
       const card = $('ov-card'), key = c ? 'c' + c.id : s.generating ? 'gen' : 'idle';
       if (key !== shownKey) {
         shownKey = key;
@@ -136,6 +142,16 @@
       finally { b.classList.remove('busy'); }
     });
   }
+  async function post(path, body) {
+    try { const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); const data = await res.json(); if (!res.ok) throw Error(data.error); }
+    catch (e) { toast(e.message || 'Something went wrong.'); }
+  }
+  if ($('queue-list')) $('queue-list').addEventListener('click', e => {
+    const start = e.target.closest('[data-start]'), remove = e.target.closest('[data-remove]');
+    if (start) post(`/api/queue/${start.dataset.start}/start`);
+    if (remove) post(`/api/queue/${remove.dataset.remove}/remove`);
+  });
+  if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => post('/api/overlay/theme', { theme: e.target.value }));
   const copy = $('copy');
   if (copy) copy.addEventListener('click', async () => {
     const done = () => { copy.classList.add('ok'); $('copy-text').textContent = 'Copied'; setTimeout(() => { copy.classList.remove('ok'); $('copy-text').textContent = 'Copy command'; }, 1800); };

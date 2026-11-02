@@ -46,3 +46,9 @@ body{color:var(--ink);font-family:var(--sans);font-weight:500;text-shadow:0 .1re
 .ov-row b{font:500 1.6rem var(--display)}
 .ov-row b small{font:800 .8rem var(--display);margin-left:.25rem;letter-spacing:.1em}
 .ov-board.hidden{display:none}
+/* Themes keep a strong dark backing over bright gameplay. */
+:root[data-overlay-theme=ember]{--amber:#ffb36b;--mint:#ffd1a1;--ember:#ff7468}
+:root[data-overlay-theme=mono]{--amber:#fff;--mint:#fff;--ember:#ff817a}
+.ov-card{background:radial-gradient(ellipse 100% 100% at 0% 100%,rgba(4,5,5,.97) 0%,rgba(4,5,5,.88) 58%,transparent 100%)}
+.ov-board{background:radial-gradient(ellipse 100% 100% at 100% 0%,rgba(4,5,5,.97) 0%,rgba(4,5,5,.88) 60%,transparent 100%)}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
