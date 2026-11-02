@@ -36,3 +36,7 @@ Only one challenge can be active at a time. Suggestions are rejected while one i
 ## Network access
 
 This hackathon build has no user accounts or login. Anyone who can reach the dashboard can operate its controls, so run it on a trusted machine/network and do not expose it publicly without adding access controls. The overlay and Socket.IO connection share the same server and port. Real Twitch and OpenAI credentials are required for chat and challenge generation; no simulated data is provided.
+
+## Credits
+
+The flowing background clip is a free stock video from [Mixkit](https://mixkit.co/free-stock-video/orange-fabric-flowing-slowly-282/), used under the [Mixkit License](https://mixkit.co/license/#videoFree).
