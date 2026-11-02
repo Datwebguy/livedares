@@ -1,103 +1,208 @@
+<div align="center">
+
+<img src="public/logo.svg" width="96" alt="LiveDares logo">
+
 # LiveDares
 
-**Turn chat’s ideas into challenges on stream.** LiveDares takes an idea from Twitch chat or the dashboard, shapes it into a short dare with OpenAI, and displays it on a live dashboard and an OBS overlay. The streamer decides the outcome; a completed dare earns its suggester 100 points.
+**Let chat dare you, then do it live.**
 
-[Open LiveDares](https://livedare.up.railway.app/) · [Open the OBS overlay](https://livedare.up.railway.app/overlay) · [Submission notes](SUBMISSION.md) · [Video plan](VIDEO.md)
+Twitch viewers send ideas, the OpenAI API turns them into short and safe dares with a countdown, the streamer performs them on stream, and the viewer behind each completed dare earns points.
 
-LiveDares is a single-channel hackathon app. Viewers can use the page without an account, or participate in Twitch chat when a channel is connected. The app has no streamer login: **anyone who can reach the dashboard can operate its controls**.
+[![Live demo](https://img.shields.io/badge/live%20demo-livedare.up.railway.app-4a6b00?style=for-the-badge)](https://livedare.up.railway.app)
+[![Twitch](https://img.shields.io/badge/Twitch-chat%20%2B%20overlay-9146FF?style=for-the-badge&logo=twitch&logoColor=white)](https://www.twitch.tv/themotioncreator)
+
+![Node.js 20+](https://img.shields.io/badge/node-%3E%3D20-339933?logo=node.js&logoColor=white)
+[![CI](https://github.com/Datwebguy/livedares/actions/workflows/ci.yml/badge.svg)](https://github.com/Datwebguy/livedares/actions/workflows/ci.yml)
+![License: MIT](https://img.shields.io/badge/license-MIT-4a6b00)
+![OpenAI](https://img.shields.io/badge/OpenAI-gpt--4o--mini%20%2B%20moderation-412991?logo=openai&logoColor=white)
+![SQLite](https://img.shields.io/badge/storage-SQLite-003B57?logo=sqlite&logoColor=white)
+
+[Try it](#try-it-in-60-seconds) · [Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [OBS setup](#add-the-overlay-in-obs) · [Commands](#chat-commands) · [Contributing](#contributing)
+
+</div>
+
+<p align="center">
+  <img src="public/og.png" width="820" alt="LiveDares: let chat dare you, then do it live">
+</p>
+
+---
+
+## Why LiveDares
+
+Twitch chat is full of ideas, such as "talk like a pirate" or "draw it with your eyes closed", but they scroll away in seconds. Nobody knows what's coming next, and the viewers who make a stream fun get nothing back.
+
+LiveDares gives chat a real way to steer the show:
+
+- **Viewers direct the stream.** Any idea from chat or the web page becomes a playable dare.
+- **The streamer stays in control.** Nothing happens until the streamer starts a dare, and the streamer always decides the result.
+- **Chat gets credit.** Completed dares award points, and the leaderboard is shown live on stream.
+
+## Features
+
+| | |
+|---|---|
+| 💬 **Twitch chat commands** | `!challenge <idea>`, `!vote`, `!done`, `!fail`, `!clear`, `!queue`, `!leaderboard`, `!rank` |
+| 🤖 **Ideas become dares** | OpenAI moderation screens each idea, then `gpt-4o-mini` writes a title, a short description and a countdown (20, 30, 45 or 60 s) as structured JSON |
+| 🗳️ **Shared queue with voting** | Up to 20 waiting dares. Chat and page votes count together. Start the most-voted dare by hand or automatically |
+| 🎥 **Transparent OBS overlay** | Countdown, votes, a "Nice work!" result moment with confetti, a top dare-givers list and a nightly tally |
+| 🎨 **Three overlay themes** | Midnight lime, Ember orange and Studio white, switched live from the dashboard |
+| 🏆 **Persistent leaderboard** | Points, wins, history, the queue and the active deadline all survive a restart (SQLite) |
+| 🌐 **No sign-in needed to try** | Anyone can send an idea from the web page, with the same safety checks, queue and points |
+| 🎮 **Game-aware dares (optional)** | Uses the live Twitch game and stream title, or a game you type in, as context |
+| 🛡️ **Safety and rate limits** | Moderation, a safety flag on every dare, a 40-second cooldown per person and per address, and moderator-only result commands |
+
 
 ## How it works
 
-1. A viewer submits an idea on the page or sends `!challenge` followed by an idea in Twitch chat.
-2. OpenAI checks the idea and turns it into a short challenge. The first challenge starts immediately; later ideas join the queue.
-3. Viewers vote on queued dares on the page or with `!vote 1`, `!vote 2`, or `!vote 3` in chat. The streamer can pick a dare or turn on automatic selection of the most-voted one.
-4. The dashboard and OBS overlay update live. The streamer marks the dare done or failed; the leaderboard and recent history persist in SQLite.
+```mermaid
+flowchart LR
+    A["Twitch chat<br/><code>!challenge idea</code>"] --> C
+    B["Web page<br/>Suggest a dare"] --> C
+    C{{"OpenAI moderation<br/>omni-moderation-latest"}} -->|not flagged| D
+    D["gpt-4o-mini<br/>title · description · seconds · safe"] --> E[("Queue + SQLite")]
+    E --> F["Dashboard<br/>start · done · failed · skip"]
+    E --> G["OBS overlay<br/>countdown · result · leaderboard"]
+    F -->|"Done (+100 pts)"| H["Leaderboard"]
+    H --> G
+    E -.->|bot replies| A
+```
 
-Dares can be suggested once every 40 seconds per viewer, and page submissions also have an address cooldown. The queue holds up to 20 waiting ideas. The countdown does not automatically decide the result. The streamer should review each dare before performing it: safety checks are best effort.
+1. A viewer types `!challenge talk like a pirate until the next dare` in chat, or uses the form on the page.
+2. **OpenAI moderation** screens the idea. If it's flagged, the viewer is told it can't be accepted.
+3. **`gpt-4o-mini`** turns it into a dare such as *"Pirate Speak Challenge: talk like a pirate until the next dare! (60 s)"*, returned as strict JSON and checked again for safety.
+4. The dare goes live straight away, or joins the queue, where chat can vote with `!vote 1`.
+5. The streamer performs it. On **Done**, the viewer earns **100 points**, and the overlay celebrates and updates the leaderboard in real time.
 
-## Try the live app
+Everything updates live over Socket.IO, so the dashboard, the overlay and chat stay in sync.
 
-Open the [dashboard](https://livedare.up.railway.app/), enter your name and an idea under **Suggest a dare**, and select **Send idea**. Open the [overlay](https://livedare.up.railway.app/overlay) in a second tab to see the stream view. When a dare is active, use **Done** or **Failed** on the dashboard.
+## Try it in 60 seconds
 
-For a guided presentation, see the [submission notes](SUBMISSION.md) and the [video plan](VIDEO.md).
+No install or account needed:
 
-## Run locally
+1. Open **https://livedare.up.railway.app**.
+2. Under **Suggest a dare**, enter an idea and a name, then select **Send idea**.
+3. Open **https://livedare.up.railway.app/overlay** in a second tab to see the broadcast view.
+4. Watch the countdown, select **Done**, and see the points, confetti and recent history.
 
-You need Node.js 20 or newer, npm, and an [OpenAI API key](https://platform.openai.com/api-keys) with billing enabled and access to `gpt-4o-mini`. The dashboard and overlay run without Twitch credentials; Twitch chat and automatic game detection are optional. If a prebuilt `better-sqlite3` binary is unavailable, a C++ build toolchain may be needed.
+To see it on Twitch, type `!challenge <your idea>` in [themotioncreator's chat](https://www.twitch.tv/themotioncreator).
+
+## Quick start
+
+**You need:**
+- Node.js 20 or newer and npm. `better-sqlite3` may need a C++ build toolchain if no prebuilt binary is available.
+- An [OpenAI API key](https://platform.openai.com/api-keys) with access to `gpt-4o-mini`.
+- A Twitch channel, plus a Twitch account to post the bot's replies. This can be the streamer's own account.
 
 ```sh
 git clone https://github.com/Datwebguy/livedares.git
 cd livedares
 npm install
-cp .env.example .env
-```
-
-Open `.env` and set `OPENAI_API_KEY`. Then start the app:
-
-```sh
+cp .env.example .env   # then fill in the values below
 npm start
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) for the dashboard and [http://localhost:3000/overlay](http://localhost:3000/overlay) for the overlay. The app starts without an OpenAI key, but cannot generate dares until one is configured.
+Only `OPENAI_API_KEY` is needed to try the dashboard and overlay; the Twitch values turn on chat. Open **http://localhost:3000**. With Twitch configured, the status pill should say **Connected to Twitch**. The overlay is at **http://localhost:3000/overlay**.
 
-## Connect Twitch chat
+### Configuration
 
-1. Choose the Twitch account that will post bot replies. This can be the streamer’s existing account or a separate account.
-2. While signed in as that account, obtain a **user access token** with `chat:read` and `chat:edit` using [Twitch’s OAuth instructions](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/) or a trusted third-party tool such as [Twitch Chat OAuth Password Generator](https://twitchapps.com/tmi/). Review the permissions before authorizing a third party.
-3. Set `TWITCH_CHANNEL` to the streamer’s Twitch login name, `TWITCH_BOT_USERNAME` to the bot account’s login name, and `TWITCH_OAUTH` to `oauth:` followed immediately by the access token. Use login names without `#` or a URL; do not use a refresh token or client ID as the chat password.
-4. Restart the app. The dashboard should show **Connected to Twitch**. Keep the token private; if it is exposed, revoke access in [Twitch Connections](https://www.twitch.tv/settings/connections) and obtain a new token.
+| Variable | Required | Description |
+|---|:---:|---|
+| `OPENAI_API_KEY` | ✅ | Used for moderation and for writing the dares |
+| `TWITCH_CHANNEL` | ✅ | The channel's login name, without `#` or a URL |
+| `TWITCH_BOT_USERNAME` | ✅ | The login of the account that posts replies. It can be the same as the channel |
+| `TWITCH_OAUTH` | ✅ | `oauth:` followed by a user access token with `chat:read` and `chat:edit` |
+| `PORT` | | Defaults to `3000` |
+| `DATABASE_PATH` | | Defaults to `./data/challenges.sqlite` |
+| `TWITCH_CLIENT_ID` / `TWITCH_CLIENT_SECRET` | | Optional. Turns on game-aware dares using the live game and stream title |
+| `TRUST_PROXY` | | Optional number of trusted reverse-proxy hops. Railway is detected automatically |
+| `PUBLIC_URL` | | Optional public address used in link previews |
 
-The broadcaster and moderators can use `!done`, `!fail`, and `!clear`. `!queue`, `!leaderboard`, and `!rank` provide chat summaries. If the bot ignores messages sent by its own account, use another account to test chat.
+### Get a Twitch chat token
 
-## Add the overlay to OBS
+1. Sign in to Twitch as the account that will post the bot's replies. Its login name is your `TWITCH_BOT_USERNAME`.
+2. Get a **user access token** with `chat:read` and `chat:edit`, using Twitch's [official OAuth guide](https://dev.twitch.tv/docs/authentication/getting-tokens-oauth/) or a trusted generator such as [twitchapps.com/tmi](https://twitchapps.com/tmi/). Third-party generators receive access to your account, so review the permissions before approving.
+3. Set `TWITCH_OAUTH=oauth:<token>` with no spaces. Don't use a refresh token or a client ID.
+4. Keep the token private. If it leaks, revoke it in [Twitch Connections](https://www.twitch.tv/settings/connections) and generate a new one.
 
-1. In OBS, choose **Sources → + → Browser** and give the source a name.
-2. Set its URL to `http://localhost:3000/overlay` if OBS and the app run on the same computer. For the hosted app, use `https://livedare.up.railway.app/overlay`.
-3. Set **Width** to `1920` and **Height** to `1080`, then select **OK**. Place the browser source above the game or camera source. The background around the overlay is transparent.
-4. Select an overlay theme on the dashboard. Connected overlays update live, and the choice survives a restart.
+## Add the overlay in OBS
 
-Use **What are you playing?** on the dashboard to save a game name for the overlay and challenge generation. If optional Twitch application credentials are configured and Twitch reports a live game, that game takes priority.
+1. In OBS, select **Sources → + → Browser** and name the source *LiveDares*.
+2. Set the URL to `http://localhost:3000/overlay`, or use your hosted HTTPS address followed by `/overlay`.
+3. Set **Width 1920** and **Height 1080**. The background is transparent.
+4. Pick **Midnight lime**, **Ember orange** or **Studio white** under *OBS overlay theme* on the dashboard. The overlay changes instantly, and the choice survives a restart.
 
-## Configuration and persistence
+## Chat commands
 
-Set values in `.env` locally or in your host’s environment settings. Never commit credentials.
+| Command | Who | What it does |
+|---|---|---|
+| `!challenge <idea>` | Everyone | Suggest a dare. Limited to one every 40 seconds per person |
+| `!vote 1` / `!vote 2` / `!vote 3` | Everyone | Vote for a waiting dare. Voting again moves your vote |
+| `!queue` | Everyone | Show the next three dares and their votes |
+| `!leaderboard` | Everyone | Show the top three viewers |
+| `!rank` | Everyone | Show your own position and points |
+| `!done` | Broadcaster and mods | Complete the dare and award **100 points** |
+| `!fail` | Broadcaster and mods | Mark the dare failed. No points are awarded |
+| `!clear` | Broadcaster and mods | Skip the current dare |
 
-| Variable | Purpose |
-| --- | --- |
-| `OPENAI_API_KEY` | Enables real idea moderation and dare generation. |
-| `TWITCH_CHANNEL` | Twitch channel login name; optional. |
-| `TWITCH_BOT_USERNAME` | Account that posts bot replies; optional. |
-| `TWITCH_OAUTH` | Bot account’s chat token with the `oauth:` prefix; optional. |
-| `TWITCH_CLIENT_ID`, `TWITCH_CLIENT_SECRET` | Optional application credentials for live game context; [register an application](https://dev.twitch.tv/console/apps) to obtain them. |
-| `PORT` | Web server port; defaults to `3000`. |
-| `DATABASE_PATH` | SQLite file path; defaults to `data/challenges.sqlite`. |
-| `TRUST_PROXY` | Optional number of trusted proxy hops; direct local requests ignore forwarded headers by default. |
-| `PUBLIC_URL` | Optional public address used in link previews. |
+The dashboard buttons (**Done**, **Failed**, **Skip it**, **Start**, **Start the most voted**) do the same things.
 
-For a container host, attach persistent storage and set `DATABASE_PATH` to a file on that volume; otherwise a redeployment may erase data. Back up SQLite with its WAL files, or stop the app before copying the database.
+## How the queue works
 
-Page votes use a salted one-way identifier, not a stored visitor address. People sharing a connection may share a page vote and cooldown. Railway uses its documented `X-Real-IP` header. For a different reverse proxy, set `TRUST_PROXY` only to the number of proxies you control; an incorrect value can allow forged addresses. See Railway’s [public networking specifications](https://docs.railway.com/networking/public-networking/specs-and-limits) and [edge networking documentation](https://docs.railway.com/networking/edge-networking).
+- When nothing is live, the first accepted idea starts immediately. Later ideas wait in the queue, which holds up to 20.
+- The countdown starts when a dare goes live. At zero, the streamer still decides the result; it never fails automatically.
+- **Start next automatically** begins the most-voted dare after a short pause.
+- Ideas are processed one at a time, so a viewer may be asked to try again during a burst.
 
-## Project layout
+## Deploy
 
-| Path | Purpose |
-| --- | --- |
-| `server.js` | Connects the web server, live updates, and optional Twitch bot. |
-| `lib/store.js` | SQLite storage for challenges, scores, votes, and settings. |
-| `lib/director.js` | OpenAI generation and moderation flow. |
-| `lib/chat.js` | Twitch chat commands. |
-| `lib/suggest.js`, `lib/page-votes.js`, `lib/client-ip.js` | Page participation and address handling. |
-| `lib/auto-start.js`, `lib/twitch-context.js` | Optional queue automation and game context. |
-| `public/` | Dashboard, overlay, styles, and assets. |
-| `test/` | Automated tests with isolated data and injected service calls. |
+LiveDares runs as one Node process. On Railway, or any other container host, mount persistent storage (for example at `/data`) and set `DATABASE_PATH=/data/challenges.sqlite` so the leaderboard survives redeploys. `GET /healthz` returns `{ "ok": true }` for health checks.
 
-Run the tests with `npm test`. `GET /healthz` returns `{"ok":true}` when the server is running.
+## Tests
 
-## What is verified
+```sh
+npm test
+```
 
-- The automated suite covers challenge handling, input validation, cooldowns, moderation, queue and vote persistence, automatic start, proxy handling, overlay result values, and manual game settings. Tests were last run with Node 20.
-- Chromium checks at 360px and 1366px exercised the dashboard, themes and overlay. An isolated browser run with injected services tested page suggestion, voting and scoring. Manual game save, reload, clear, and overlay updates were checked on a local server.
-- Earlier in the project, a real Twitch chat message produced a dare through OpenAI. The newer page voting, moderation, game context and result overlay have not been verified together against real Twitch, OpenAI and OBS. A live multi-visitor Railway rehearsal is still needed for proxy behavior and page votes.
+There are **28 automated tests**, run with Node's built-in `node:test`. They cover:
+- scoring, queue order, voting and automatic start;
+- cooldowns, moderation results, and unsafe or malformed AI answers;
+- who may use chat commands, and chat summaries;
+- persistence across restarts and clean shutdown;
+- page suggestions, address handling and game context.
+
+All network calls are injected, so the tests run offline.
+
+The full flow (Twitch chat → OpenAI → dashboard and overlay → points) has also been run live in the [themotioncreator](https://www.twitch.tv/themotioncreator) channel on the hosted app.
+
+## Project structure
+
+```
+server.js              Web server, live updates (Socket.IO) and the Twitch chat connection
+lib/director.js        Moderation + gpt-4o-mini: turns an idea into a dare
+lib/chat.js            Chat commands and who may use them
+lib/store.js           SQLite: challenges, queue, votes, scores and theme
+lib/suggest.js         Page suggestions with validation and cooldowns
+lib/page-votes.js      Page votes, stored as salted one-way IDs rather than addresses
+lib/auto-start.js      Starts the most-voted dare automatically
+lib/twitch-context.js  Optional live game and stream title from the Twitch API
+public/                Dashboard (index.html, app.js, style.css) and the OBS overlay
+test/                  Automated tests
+```
+
+## Contributing
+
+Issues and pull requests are welcome. Please run `npm test` before opening a pull request; CI runs the same suite on every push.
+
+## Security notes
+
+- LiveDares is a **single-channel** app with **no login**. Anyone who can reach the dashboard can control the dares, so keep it on a trusted network or put access protection in front of it. The overlay needs no login.
+- Viewer text, the game name and the stream title are treated as untrusted content in the prompt, never as instructions.
+- Page voters are stored as salted one-way identifiers, not as addresses.
+- Only set `TRUST_PROXY` for proxies you control. A wrong hop count can let visitors forge their address.
+
+## License
+
+Released under the [MIT License](LICENSE).
 
 ## Credits
 
