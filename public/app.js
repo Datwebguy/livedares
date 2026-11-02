@@ -109,13 +109,13 @@
         shownKey = key;
         const pill = $('challenge-status');
         if (c) {
-          $('challenge-body').innerHTML = `<div class="running" id="ring"><span class="from">Suggested by ${esc(c.suggested_by)}</span><h3>${esc(c.title)}</h3><p>${esc(c.description)}</p><div class="clock"><strong id="timer">--:--</strong><small id="timer-label">left</small></div><div class="fuse"><i id="arc"></i></div></div>`;
+          $('challenge-body').innerHTML = `<div class="running" id="ring"><span class="from">Suggested by ${esc(c.suggested_by)}</span><h2>${esc(c.title)}</h2><p>${esc(c.description)}</p><div class="clock"><strong id="timer">--:--</strong><small id="timer-label">left</small></div><div class="fuse"><i id="arc"></i></div></div>`;
         } else if (s.generating) {
           pill.className = 'pill working'; pill.querySelector('b').textContent = 'Making it';
-          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h3>Making a dare…</h3><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h2>Making a dare…</h2><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
         } else {
           pill.className = 'pill'; pill.querySelector('b').textContent = 'Waiting';
-          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h3>Waiting for chat's next idea.</h3><p>As soon as a viewer suggests something, it shows up here with a countdown.</p></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h2>Waiting for chat's next idea.</h2><p>As soon as a viewer suggests something, it shows up here with a countdown.</p></div></div>`;
         }
       }
       const queue = s.queue || [], recent = s.recent || [];

@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 const { Server } = require('socket.io');
 const tmi = require('tmi.js');
 const { createStore } = require('./lib/store');
@@ -35,6 +36,14 @@ app.disable('x-powered-by');
 const clientIp = createClientIp();
 app.use((_req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' }); next(); });
 app.use(express.json({ limit: '4kb' }));
+// The home page carries link-preview tags that need the site's real address, so fill it in from the request.
+const indexHtml = fs.readFileSync(path.join(__dirname, 'public', 'index.html'), 'utf8');
+app.get(['/', '/index.html'], (req, res) => {
+  const host = /^[a-z0-9.-]+(:\d+)?$/i.test(req.get('host') || '') ? req.get('host') : 'localhost';
+  const local = /^(localhost|127\.0\.0\.1)(:|$)/.test(host);
+  const base = process.env.PUBLIC_URL?.replace(/\/+$/, '') || `${local ? 'http' : 'https'}://${host}`;
+  res.type('html').send(indexHtml.replaceAll('__BASE__', base));
+});
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/overlay', (_req, res) => res.sendFile(path.join(__dirname, 'public', 'overlay.html')));

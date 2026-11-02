@@ -4,7 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="dark light"><meta name="theme-color" content="#08090a">
-<title>LiveDares</title>
+<title>LiveDares · Let chat dare you</title>
+<meta name="description" content="Viewers send an idea in Twitch chat. It becomes a short timed dare you do live on stream, and the viewer behind it earns points.">
+<meta property="og:type" content="website"><meta property="og:site_name" content="LiveDares">
+<meta property="og:title" content="LiveDares · Let chat dare you, then do it live">
+<meta property="og:description" content="Viewers send an idea in Twitch chat. It becomes a short timed dare you do live on stream, and the viewer behind it earns points.">
+<meta property="og:url" content="__BASE__/"><meta property="og:image" content="__BASE__/og.png"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image"><meta name="twitter:title" content="LiveDares · Let chat dare you"><meta name="twitter:image" content="__BASE__/og.png">
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <script>try{var t=localStorage.getItem('theme');document.documentElement.dataset.theme=t||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch(e){document.documentElement.dataset.theme='dark'}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,7 +29,7 @@
 </defs></svg>
 
 <div class="bgmedia" aria-hidden="true">
-  <video id="bgvideo" autoplay muted loop playsinline preload="auto" poster="/poster.jpg"><source src="/flow.webm" type="video/webm"><source src="/flow.mp4" type="video/mp4"></video>
+  <video id="bgvideo" muted loop playsinline preload="none" poster="/poster.jpg"></video>
   <i class="tint"></i>
 </div>
 <canvas id="confetti" aria-hidden="true"></canvas>
@@ -80,8 +86,13 @@
 <div id="toast" role="status"></div>
 <script>
 (function(){
-  var v=document.getElementById('bgvideo'), reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(reduce){v.removeAttribute('autoplay');v.pause()} else {var p=v.play(); if(p&&p.catch)p.catch(function(){})}
+  // The flowing background only loads when it is welcome: not on data-saver, slow links or reduced motion. The still poster stays instead.
+  var v=document.getElementById('bgvideo'), c=navigator.connection||{};
+  var skip=matchMedia('(prefers-reduced-motion: reduce)').matches||c.saveData||/(^|-)2g$/.test(c.effectiveType||'');
+  if(!skip){
+    [['/flow.webm','video/webm'],['/flow.mp4','video/mp4']].forEach(function(t){var s=document.createElement('source');s.src=t[0];s.type=t[1];v.appendChild(s)});
+    v.preload='auto'; v.load(); var p=v.play(); if(p&&p.catch)p.catch(function(){});
+  }
   var root=document.documentElement;
   document.getElementById('theme').addEventListener('click',function(){var n=root.dataset.theme==='light'?'dark':'light';root.dataset.theme=n;try{localStorage.setItem('theme',n)}catch(e){}});
 })();

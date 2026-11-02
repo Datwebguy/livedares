@@ -32,3 +32,13 @@ test('the server shuts down cleanly when asked', async () => {
   const s = await boot(); const code = await new Promise(r => { s.child.once('exit', c => r(c)); s.child.kill('SIGTERM'); });
   assert.equal(code, 0);
 });
+
+test('the home page carries link-preview tags with the real address', async t => {
+  const s = await boot(); t.after(s.stop);
+  const html = await (await fetch(s.url + '/')).text();
+  assert.ok(html.includes(`<meta property="og:image" content="${s.url}/og.png">`));
+  assert.ok(!html.includes('__BASE__'));
+  assert.equal((await fetch(s.url + '/og.png')).status, 200);
+  const home = await fetch(s.url + '/', { headers: { host: 'bad host"><script>' } }).catch(() => null);
+  if (home) assert.ok(!(await home.text()).includes('<script>alert'));
+});
