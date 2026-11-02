@@ -7,6 +7,7 @@ const tmi = require('tmi.js');
 const { createStore } = require('./lib/store');
 const { createDirector, openAiGenerator } = require('./lib/director');
 const { createChatHandler } = require('./lib/chat');
+const { createSuggestionHandler } = require('./lib/suggest');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
@@ -28,6 +29,7 @@ app.get('/overlay', (_req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 app.get('/api/state', (_req, res) => res.json(publicState()));
 
+app.post('/api/suggest', createSuggestionHandler({ director }));
 app.post('/api/challenge/:action', (req, res) => {
   if (!['done', 'fail', 'clear'].includes(req.params.action)) return res.status(404).json({ error: 'Unknown action.' });
   if (!store.resolve(req.params.action)) return res.status(409).json({ error: 'There is no active challenge.' });

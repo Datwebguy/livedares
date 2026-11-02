@@ -47,6 +47,10 @@
     <p class="cmd"><span>In your chat, type</span><code>!challenge</code><span>and the idea.</span><button class="copy" id="copy" type="button" aria-label="Copy the chat command"><span id="copy-text">Copy command</span></button></p>
   </section>
 
+  <form id="suggest-form" class="suggest-form">
+    <label for="suggest-idea">Suggest a dare</label>
+    <div class="suggest-fields"><input id="suggest-idea" name="idea" maxlength="400" required placeholder="Your idea"><input id="suggest-name" name="name" maxlength="25" pattern="[A-Za-z0-9_]{1,25}" required placeholder="Your name" aria-label="Your name"><button class="btn done" type="submit">Send idea</button></div>
+  </form>
   <div class="layout">
     <section class="stage" id="stage" aria-live="polite">
       <div class="head"><span class="label">Current dare</span><span class="pill" id="challenge-status"><i></i><b>Waiting</b></span></div>

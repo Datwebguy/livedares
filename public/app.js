@@ -160,6 +160,11 @@
     if (remove) run(`/api/queue/${remove.dataset.remove}/remove`);
   });
   if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => api('/api/overlay/theme', { theme: e.target.value }).catch(err => toast(err.message)));
+  if ($('suggest-form')) $('suggest-form').addEventListener('submit', async e => {
+    e.preventDefault(); const button = e.currentTarget.querySelector('button'); button.disabled = true;
+    try { const result = await api('/api/suggest', { name: $('suggest-name').value, idea: $('suggest-idea').value }); toast(result.message, true); $('suggest-idea').value = ''; }
+    catch (err) { toast(err.message); } finally { button.disabled = false; }
+  });
   const copy = $('copy');
   if (copy) copy.addEventListener('click', async () => {
     const done = () => { copy.classList.add('ok'); $('copy-text').textContent = 'Copied'; setTimeout(() => { copy.classList.remove('ok'); $('copy-text').textContent = 'Copy command'; }, 1800); };
