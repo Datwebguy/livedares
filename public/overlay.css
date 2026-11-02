@@ -52,3 +52,13 @@ body{color:var(--ink);font-family:var(--sans);font-weight:500;text-shadow:0 .1re
 .ov-card{background:radial-gradient(ellipse 100% 100% at 0% 100%,rgba(4,5,5,.97) 0%,rgba(4,5,5,.88) 58%,transparent 100%)}
 .ov-board{background:radial-gradient(ellipse 100% 100% at 100% 0%,rgba(4,5,5,.97) 0%,rgba(4,5,5,.88) 60%,transparent 100%)}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important}}
+/* A compact identity and stable timer make the overlay easy to follow on stream. */
+.ov-brand{display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem;font:600 1.35rem var(--display);letter-spacing:.02em}
+.ov-brand img{width:2.4rem;height:2.4rem}
+.ov-live{margin-left:.4rem;padding:.35rem .7rem;border:.07rem solid currentColor;border-radius:99rem;color:var(--amber);font:600 .8rem var(--sans);letter-spacing:.12em}
+.ov-clock{padding:.55rem 1rem;border-left:.2rem solid var(--amber);background:rgba(0,0,0,.3);border-radius:0 .5rem .5rem 0}
+.ov-card[data-state=over] .ov-clock strong{animation:none}
+.ov-card[data-state=idle] .ov-brand{margin-bottom:.75rem}
+.ov-card[data-state=idle] .ov-live{display:none}
+.ov-card[data-state=idle] p{font-weight:600;color:#fff}
+.ov-card[data-state=idle]{background:radial-gradient(ellipse 100% 100% at 0% 100%,rgba(4,5,5,.96) 0%,rgba(4,5,5,.82) 55%,transparent 100%)}
