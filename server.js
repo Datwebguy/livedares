@@ -8,6 +8,7 @@ const { createStore } = require('./lib/store');
 const { createDirector, openAiGenerator } = require('./lib/director');
 const { createChatHandler } = require('./lib/chat');
 const { createSuggestionHandler } = require('./lib/suggest');
+const { createAutoStart } = require('./lib/auto-start');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
@@ -17,7 +18,10 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 const publicState = () => store.state();
-const broadcast = () => io.emit('state', publicState());
+let auto;
+const broadcast = () => { io.emit('state', publicState()); auto?.schedule(); };
+auto = createAutoStart({ store, onChange: broadcast });
+auto.schedule();
 store.onChange = broadcast;
 
 app.disable('x-powered-by');
@@ -35,6 +39,8 @@ app.post('/api/challenge/:action', (req, res) => {
   if (!store.resolve(req.params.action)) return res.status(409).json({ error: 'There is no active challenge.' });
   broadcast(); res.json({ ok: true });
 });
+app.post('/api/queue/start-most-voted', (_req, res) => { const error = store.startMostVoted(); if (error) return res.status(409).json({ error }); broadcast(); res.json({ ok: true }); });
+app.post('/api/queue/auto', (req, res) => { if (!store.setAutoStart(req.body?.enabled)) return res.status(400).json({ error: 'Choose on or off.' }); broadcast(); res.json({ ok: true }); });
 app.post('/api/queue/:id/start', (req, res) => {
   const error = store.startQueued(req.params.id);
   if (error) return res.status(409).json({ error });
@@ -70,6 +76,7 @@ server.listen(port, () => console.log(`LiveDares running at http://localhost:${p
 
 // Railway stops the old container on every deploy: close cleanly so the database is never cut mid-write.
 function shutdown() {
+  auto.close();
   client?.disconnect().catch(() => {});
   io.close(); server.close(() => { try { store.close(); } catch {} process.exit(0); });
   setTimeout(() => process.exit(0), 4000).unref();

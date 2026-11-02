@@ -112,8 +112,9 @@
       }
       const queue = s.queue || [], recent = s.recent || [];
       $('queue-count').textContent = `${queue.length} waiting`;
-      setHtml($('queue-list'), queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>');
+      setHtml($('queue-list'), queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s · ${q.votes || 0} votes</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>');
       setHtml($('recent-list'), recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>');
+      $('auto-start').checked = !!s.autoStart; $('start-most').disabled = !!c || !queue.length;
       $('overlay-theme').value = s.overlayTheme || 'midnight';
       const board = $('leaderboard');
       setHtml(board, leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`);
@@ -130,6 +131,9 @@
         }
         card.classList.remove('enter'); void card.offsetWidth; card.classList.add('enter');
       }
+      const next = (s.queue || []).slice(0, 3), nextEl = $('ov-next'); nextEl.hidden = next.length < 2;
+      const maxVotes = Math.max(1, ...next.map(q => q.votes || 0));
+      setHtml($('ov-votes'), next.map((q, i) => `<div class="ov-vote"><span>${i + 1}. ${esc(q.title)}</span><b>${q.votes || 0}</b><i style="width:${((q.votes || 0) / maxVotes * 100).toFixed(0)}%"></i></div>`).join(''));
       $('ov-board').classList.toggle('hidden', !leaders.length);
       setHtml($('overlay-leaderboard'), leaderHtml(leaders, true));
     }
@@ -159,6 +163,8 @@
     if (start) run(`/api/queue/${start.dataset.start}/start`);
     if (remove) run(`/api/queue/${remove.dataset.remove}/remove`);
   });
+  if ($('start-most')) $('start-most').addEventListener('click', () => api('/api/queue/start-most-voted').catch(err => toast(err.message)));
+  if ($('auto-start')) $('auto-start').addEventListener('change', e => api('/api/queue/auto', { enabled: e.target.checked }).catch(err => toast(err.message)));
   if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => api('/api/overlay/theme', { theme: e.target.value }).catch(err => toast(err.message)));
   if ($('suggest-form')) $('suggest-form').addEventListener('submit', async e => {
     e.preventDefault(); const button = e.currentTarget.querySelector('button'); button.disabled = true;
