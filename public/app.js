@@ -89,6 +89,7 @@
       else if (!isOverlay) toast('Dare skipped');
     }
 
+    const playingEl = $(isOverlay ? 'ov-playing' : 'playing'); if (playingEl) { playingEl.hidden = !s.playing?.game; playingEl.textContent = s.playing?.game ? `Playing: ${s.playing.game}` : ''; }
     if (!isOverlay) {
       const online = connected && s.twitchConnected;
       const conn = $('connection'); conn.classList.toggle('online', online); conn.classList.toggle('off', !connected);

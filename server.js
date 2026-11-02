@@ -9,20 +9,25 @@ const { createDirector, openAiGenerator } = require('./lib/director');
 const { createChatHandler } = require('./lib/chat');
 const { createSuggestionHandler } = require('./lib/suggest');
 const { createAutoStart } = require('./lib/auto-start');
+const { createTwitchContext } = require('./lib/twitch-context');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
-const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null });
+const twitchContext = createTwitchContext({ clientId: process.env.TWITCH_CLIENT_ID, clientSecret: process.env.TWITCH_CLIENT_SECRET, channel });
+const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null, getContext: () => twitchContext.get() });
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
-const publicState = () => store.state();
+let playing = null;
+const publicState = () => ({ ...store.state(), playing });
 let auto;
 const broadcast = () => { io.emit('state', publicState()); auto?.schedule(); };
 auto = createAutoStart({ store, onChange: broadcast });
 auto.schedule();
 store.onChange = broadcast;
+async function refreshPlaying() { const next = await twitchContext.get(); if (JSON.stringify(next) !== JSON.stringify(playing)) { playing = next; broadcast(); } }
+refreshPlaying(); const contextTimer = setInterval(refreshPlaying, 60000); contextTimer.unref();
 
 app.disable('x-powered-by');
 app.use((_req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' }); next(); });
@@ -76,7 +81,7 @@ server.listen(port, () => console.log(`LiveDares running at http://localhost:${p
 
 // Railway stops the old container on every deploy: close cleanly so the database is never cut mid-write.
 function shutdown() {
-  auto.close();
+  clearInterval(contextTimer); auto.close();
   client?.disconnect().catch(() => {});
   io.close(); server.close(() => { try { store.close(); } catch {} process.exit(0); });
   setTimeout(() => process.exit(0), 4000).unref();
