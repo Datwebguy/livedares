@@ -78,3 +78,19 @@ The flowing background clip is a free stock video from [Mixkit](https://mixkit.c
 - `GET /healthz` answers `{ "ok": true }` for deploy health checks.
 
 Run `npm test`. It checks scoring, the queue order, cooldowns, unsafe or malformed AI answers, who may use chat commands, restarts and clean shutdown.
+
+## Page suggestions and chat voting
+
+Anyone opening the dashboard can submit an idea using **Suggest a dare** and a name containing 1–25 letters, numbers or underscores. OpenAI must be configured on the server; Twitch is optional. Page and chat ideas share the same safety checks, queue and name cooldown. Page requests also have an address cooldown.
+
+Viewers can use `!vote 1`, `!vote 2`, or `!vote 3` to vote for a position in the queue; voting again replaces their previous vote. The dashboard can start the most-voted dare, or automatically start it after a short pause. Votes and the automatic-start setting persist. `!queue`, `!leaderboard`, and `!rank` show chat summaries.
+
+OpenAI moderation checks each idea before generation. If moderation is unavailable, the existing generation safety check still applies. If both optional `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` are configured, the app uses Twitch's app access flow to add the live game's name and stream title as untrusted context. [Register a Twitch application](https://dev.twitch.tv/console/apps) to obtain those two values. The feature remains off if either is missing.
+
+## What is verified
+
+- Automated tests cover the existing challenge flow, page input and cooldown, voting and persistence, automatic start, optional Twitch context using injected responses, moderation using injected responses, chat summaries and result values. Run `npm test` with Node 20.
+- Chromium was used at 360 and 1366 pixels to check the dashboard and overlay, the theme toggle, horizontal overflow, and page errors. With no local OpenAI key, the page form’s unavailable-service message was checked. A separate isolated browser test used injected generation and chat calls to exercise suggestion, voting, overlay updates and scoring at both widths; it did not call the real services.
+- Earlier in this project, a real Twitch chat message produced a dare through OpenAI. The newer page suggestion, votes, moderation, game context, and result overlay have not yet been verified end to end against real Twitch, OpenAI and OBS. Real game-context testing requires the optional Twitch application credentials.
+
+Additional modules: `lib/suggest.js` validates page submissions, `lib/auto-start.js` schedules the next dare, and `lib/twitch-context.js` fetches optional game context. `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` are optional; see `.env.example` for all configuration.

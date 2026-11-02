@@ -30,6 +30,8 @@ async function refreshPlaying() { const next = await twitchContext.get(); if (JS
 refreshPlaying(); const contextTimer = setInterval(refreshPlaying, 60000); contextTimer.unref();
 
 app.disable('x-powered-by');
+// Railway terminates TLS at its trusted ingress; use the client address for rate limiting.
+if (process.env.RAILWAY_ENVIRONMENT) app.set('trust proxy', 1);
 app.use((_req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' }); next(); });
 app.use(express.json({ limit: '4kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -61,7 +63,7 @@ app.post('/api/overlay/theme', (req, res) => {
 });
 app.use('/api', (_req, res) => res.status(404).json({ error: 'Not found.' }));
 // Bad JSON and similar should answer with JSON, not an HTML error page.
-app.use((err, _req, res, _next) => { const status = err.status || 500; if (status >= 500) console.error(err); res.status(status).json({ error: status >= 500 ? 'Something went wrong.' : 'Bad request.' }); });
+app.use((err, _req, res, _next) => { const status = err.status || 500; if (status >= 500) console.error('Request failed.'); res.status(status).json({ error: status >= 500 ? 'Something went wrong.' : 'Bad request.' }); });
 
 io.on('connection', socket => socket.emit('state', publicState()));
 
