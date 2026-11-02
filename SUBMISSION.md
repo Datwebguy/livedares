@@ -18,7 +18,7 @@ Codex session ID: unavailable in this environment. The `/status` command is not 
 
 ## Try it in 60 seconds
 
-Open https://livedares-production.up.railway.app/ . Under **Suggest a dare**, enter your name and idea, then select **Send idea**. Watch the countdown, select **Done**, and see the points and recent history. No account is required to use the page. The hosted service must have a working OpenAI key configured. Open https://livedares-production.up.railway.app/overlay in a second tab to see the broadcast view.
+Open https://livedare.up.railway.app/ . Under **Suggest a dare**, enter your name and idea, then select **Send idea**. Watch the countdown, select **Done**, and see the points and recent history. No account is required to use the page. The hosted service must have a working OpenAI key configured. Open https://livedare.up.railway.app/overlay in a second tab to see the broadcast view.
 
 ## Run locally and connect Twitch and OBS
 
