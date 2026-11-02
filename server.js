@@ -5,7 +5,7 @@ const path = require('path');
 const { Server } = require('socket.io');
 const tmi = require('tmi.js');
 const { createStore } = require('./lib/store');
-const { createDirector, openAiGenerator } = require('./lib/director');
+const { createDirector, openAiGenerator, openAiModerator } = require('./lib/director');
 const { createChatHandler } = require('./lib/chat');
 const { createSuggestionHandler } = require('./lib/suggest');
 const { createAutoStart } = require('./lib/auto-start');
@@ -14,7 +14,7 @@ const { createTwitchContext } = require('./lib/twitch-context');
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
 const twitchContext = createTwitchContext({ clientId: process.env.TWITCH_CLIENT_ID, clientSecret: process.env.TWITCH_CLIENT_SECRET, channel });
-const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null, getContext: () => twitchContext.get() });
+const director = createDirector({ store, generate: process.env.OPENAI_API_KEY ? openAiGenerator(process.env.OPENAI_API_KEY) : null, moderate: process.env.OPENAI_API_KEY ? openAiModerator(process.env.OPENAI_API_KEY) : null, getContext: () => twitchContext.get() });
 
 const app = express();
 const server = http.createServer(app);
@@ -69,11 +69,11 @@ let client;
 if (channel && process.env.TWITCH_BOT_USERNAME && process.env.TWITCH_OAUTH && process.env.TWITCH_OAUTH !== 'oauth:') {
   client = new tmi.Client({ options: { debug: false }, connection: { reconnect: true, secure: true }, identity: { username: process.env.TWITCH_BOT_USERNAME, password: process.env.TWITCH_OAUTH }, channels: [channel] });
   client.on('connected', () => { store.flags.twitchConnected = true; broadcast(); console.log(`Twitch connected to #${channel}`); });
-  client.on('disconnected', reason => { store.flags.twitchConnected = false; broadcast(); console.warn('Twitch disconnected:', reason); });
-  const say = message => client.say(channel, message).catch(err => console.error('Twitch message failed:', err.message));
+  client.on('disconnected', reason => { store.flags.twitchConnected = false; broadcast(); console.warn('Twitch disconnected.'); });
+  const say = message => client.say(channel, message).catch(err => console.error('Twitch message failed.'));
   const handle = createChatHandler({ store, director, say, onChange: broadcast });
-  client.on('message', (_channel, tags, message, self) => { if (!self) handle(tags, message).catch(err => console.error('Chat handler:', err.message)); });
-  client.connect().catch(err => { store.flags.twitchConnected = false; broadcast(); console.error('Twitch connection failed:', err.message); });
+  client.on('message', (_channel, tags, message, self) => { if (!self) handle(tags, message).catch(err => console.error('Chat handler failed.')); });
+  client.connect().catch(err => { store.flags.twitchConnected = false; broadcast(); console.error('Twitch connection failed.'); });
 } else console.log('Twitch is not configured. Set TWITCH_CHANNEL, TWITCH_BOT_USERNAME and TWITCH_OAUTH in .env.');
 
 const port = Number(process.env.PORT) || 3000;
