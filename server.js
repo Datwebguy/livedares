@@ -49,14 +49,14 @@ async function createChallenge(text, username) {
  generating = true; broadcast();
  try {
   const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const completion = await openai.chat.completions.create({ model: 'gpt-4o-mini', response_format: { type: 'json_object' }, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: text.slice(0, 400) }], max_tokens: 200 });
+  const completion = await openai.chat.completions.create({ model: 'gpt-4o-mini', response_format: { type: 'json_schema', json_schema: { name: 'challenge', strict: true, schema: { type: 'object', additionalProperties: false, properties: { title: { type: 'string' }, description: { type: 'string' }, seconds: { type: 'integer', enum: [20, 30, 45, 60] }, safe: { type: 'boolean' } }, required: ['title', 'description', 'seconds', 'safe'] } } }, messages: [{ role: 'system', content: SYSTEM_PROMPT }, { role: 'user', content: text.slice(0, 400) }], max_tokens: 200 });
   let result;
   try { result = JSON.parse(completion.choices[0]?.message?.content || ''); } catch { throw new Error('Could not parse the challenge. Please try again.'); }
   if (result.safe !== true) throw new Error('That suggestion could not be accepted as a safe challenge.');
-  if (typeof result.title !== 'string' || !result.title.trim() || result.title.length > 60 || typeof result.description !== 'string' || !result.description.trim() || result.description.length > 120 || ![20,30,45,60].includes(result.seconds)) throw new Error('The challenge response was invalid. Please try again.');
+  if (typeof result.title !== 'string' || !result.title.trim() || typeof result.description !== 'string' || !result.description.trim() || ![20,30,45,60].includes(result.seconds)) throw new Error('The challenge response was invalid. Please try again.');
   if (active()) throw new Error('There is already an active challenge.');
   const now = Date.now();
-  db.prepare('INSERT INTO challenges (title, description, seconds, suggested_by, created_at, ends_at) VALUES (?, ?, ?, ?, ?, ?)').run(result.title.trim(), result.description.trim(), result.seconds, username, now, now + result.seconds * 1000);
+  db.prepare('INSERT INTO challenges (title, description, seconds, suggested_by, created_at, ends_at) VALUES (?, ?, ?, ?, ?, ?)').run(result.title.trim().slice(0, 60), result.description.trim().slice(0, 120), result.seconds, username, now, now + result.seconds * 1000);
   return active();
  } finally { generating = false; broadcast(); }
 }
