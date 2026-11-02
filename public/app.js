@@ -7,7 +7,7 @@
   const COLORS = ['#d6ff3f', '#9bf0c4', '#f4f6ee', '#ffd166', '#7ee0ff', '#b8f06a'];
   const colorFor = name => { let h = 0; for (const ch of String(name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return COLORS[h % COLORS.length]; };
 
-  let current = null, prev = null, connected = false, shownKey = '';
+  let current = null, prev = null, connected = false, shownKey = '', resultTimer;
   const lastPoints = {};
   const isOverlay = document.body.classList.contains('overlay-page');
 
@@ -83,6 +83,12 @@
     const prevC = prev && prev.challenge;
 
     // A challenge that just ended: celebrate if its creator was awarded points.
+    if (isOverlay && prevC && !c && s.lastResult?.id === prevC.id) {
+      const el = $('ov-result'), result = s.lastResult;
+      el.textContent = result.status === 'done' ? `Nice work! @${result.suggested_by} earns ${result.points} points` : 'Good try. On to the next dare.';
+      el.className = 'ov-result ' + (result.status === 'done' ? 'success' : 'failed'); el.hidden = false;
+      clearTimeout(resultTimer); resultTimer = setTimeout(() => { el.hidden = true; }, 4500);
+    }
     if (prevC && !c) {
       const before = (prev.leaderboard || []).reduce((n, u) => n + u.points, 0), after = leaders.reduce((n, u) => n + u.points, 0);
       if (after > before) { burst(); if (!isOverlay) toast(`+${after - before} points for @${prevC.suggested_by}`, true); }
@@ -120,6 +126,7 @@
       const board = $('leaderboard');
       setHtml(board, leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`);
     } else {
+      $('ov-tonight').textContent = `Tonight · ${s.tonight?.completed || 0} completed · ${s.tonight?.total || 0} played`;
       document.documentElement.dataset.overlayTheme = s.overlayTheme || 'midnight';
       const card = $('ov-card'), key = c ? 'c' + c.id : s.generating ? 'gen' : 'idle';
       if (key !== shownKey) {
