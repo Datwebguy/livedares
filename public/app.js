@@ -90,14 +90,14 @@
           $('challenge-body').innerHTML = `<div class="running" id="ring"><span class="from">Chat's pick · @${esc(c.suggested_by)}</span><h3>${esc(c.title)}</h3><p>${esc(c.description)}</p><div class="clock"><strong id="timer">--:--</strong><small id="timer-label">Left</small></div><div class="fuse"><i id="arc"></i></div></div>`;
         } else if (s.generating) {
           pill.className = 'pill working'; pill.querySelector('b').textContent = 'Creating';
-          $('challenge-body').innerHTML = `<div class="empty"><div class="dial work"></div><div><h3>Making a dare</h3><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h3>Making a dare</h3><p>Turning a viewer's idea into something you can do on stream.</p></div></div>`;
         } else {
           pill.className = 'pill'; pill.querySelector('b').textContent = 'Waiting';
-          $('challenge-body').innerHTML = `<div class="empty"><div class="dial"></div><div><h3>Waiting on chat</h3><p>No dare is running. The next one starts the moment a viewer suggests it.</p><span class="hint">Chat types <code>!challenge &lt;idea&gt;</code></span></div></div>`;
+          $('challenge-body').innerHTML = `<div class="empty"><svg class="mark" aria-hidden="true"><use href="#mark"/></svg><div><h3>Waiting on chat</h3><p>No dare is running. The next one starts the moment a viewer suggests it.</p><span class="hint">Chat types <code>!challenge &lt;idea&gt;</code></span></div></div>`;
         }
       }
       const board = $('leaderboard');
-      board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><span class="e-ico"><svg viewBox="0 0 24 24"><path d="M12 3l2.4 5.6L20 9.5l-4.3 3.8L17 19l-5-3-5 3 1.3-5.7L4 9.5l5.6-.9z"/></svg></span><strong>No points yet</strong><p>Mark a dare done and the viewer who suggested it takes first place.</p></div>`;
+      board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet</strong><p>Mark a dare done and the viewer who suggested it takes first place.</p></div>`;
     } else {
       const card = $('ov-card'), key = c ? 'c' + c.id : s.generating ? 'gen' : 'idle';
       if (key !== shownKey) {
