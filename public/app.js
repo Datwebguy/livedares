@@ -34,6 +34,27 @@
   let toastTimer;
   function toast(text, good) { const t = $('toast'); if (!t) return; t.textContent = text; t.className = 'show' + (good ? ' good' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.className = '', 3600); }
 
+  /* ---------- Helpers ---------- */
+  // Only touch the page when the markup really changed, so lists do not flicker or replay their animations.
+  const memo = new WeakMap();
+  function setHtml(el, html) { if (!el || memo.get(el) === html) return; memo.set(el, html); el.innerHTML = html; }
+  let adminToken = ''; try { adminToken = localStorage.getItem('adminToken') || ''; } catch {}
+  // One way to change the show. If the streamer set a password, ask for it once and remember it.
+  async function api(path, body, retry = true) {
+    let res;
+    try { res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(adminToken ? { 'x-admin-token': adminToken } : {}) }, body: JSON.stringify(body || {}) }); }
+    catch { throw Error('Could not reach the server. Check your connection.'); }
+    const data = await res.json().catch(() => ({}));
+    if (res.status === 401 && retry) {
+      const given = window.prompt('Enter your streamer password');
+      if (!given) throw Error('That needs your streamer password.');
+      adminToken = given.trim(); try { localStorage.setItem('adminToken', adminToken); } catch {}
+      return api(path, body, false);
+    }
+    if (!res.ok) { if (res.status === 401) { adminToken = ''; try { localStorage.removeItem('adminToken'); } catch {} } throw Error(data.error || 'Something went wrong.'); }
+    return data;
+  }
+
   /* ---------- Timer ---------- */
   function tick() {
     const c = current && current.challenge; if (!c) return;
@@ -98,11 +119,11 @@
       }
       const queue = s.queue || [], recent = s.recent || [];
       $('queue-count').textContent = `${queue.length} waiting`;
-      $('queue-list').innerHTML = queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>';
-      $('recent-list').innerHTML = recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>';
+      setHtml($('queue-list'), queue.length ? queue.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)} · ${q.seconds}s</small></div><div class="row-actions"><button data-start="${q.id}" ${c ? 'disabled title="Finish the current dare first"' : ''}>Start</button><button data-remove="${q.id}" aria-label="Remove ${esc(q.title)}">×</button></div></div>`).join('') : '<p class="utility-empty">No ideas waiting yet.</p>');
+      setHtml($('recent-list'), recent.length ? recent.map(q => `<div class="utility-row"><div><strong>${esc(q.title)}</strong><small>@${esc(q.suggested_by)}</small></div><span class="result ${esc(q.status)}">${q.status === 'done' ? 'Completed' : q.status === 'failed' ? 'Failed' : 'Cleared'}</span></div>`).join('') : '<p class="utility-empty">Completed and cleared challenges appear here.</p>');
       $('overlay-theme').value = s.overlayTheme || 'midnight';
       const board = $('leaderboard');
-      board.innerHTML = leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`;
+      setHtml(board, leaders.length ? leaderHtml(leaders, false) : `<div class="board-empty"><strong>No points yet.</strong><p>Mark a dare as done and the viewer who suggested it takes first place.</p></div>`);
     } else {
       document.documentElement.dataset.overlayTheme = s.overlayTheme || 'midnight';
       const card = $('ov-card'), key = c ? 'c' + c.id : s.generating ? 'gen' : 'idle';
@@ -117,7 +138,7 @@
         card.classList.remove('enter'); void card.offsetWidth; card.classList.add('enter');
       }
       $('ov-board').classList.toggle('hidden', !leaders.length);
-      $('overlay-leaderboard').innerHTML = leaderHtml(leaders, true);
+      setHtml($('overlay-leaderboard'), leaderHtml(leaders, true));
     }
 
     leaders.forEach(u => { lastPoints[u.username] = u.points; });
@@ -135,23 +156,17 @@
     const b = $(id); if (!b) continue;
     b.addEventListener('click', async () => {
       b.classList.add('busy');
-      try {
-        const res = await fetch(`/api/challenge/${id}`, { method: 'POST' }); const data = await res.json();
-        if (!res.ok) throw Error(data.error);
-      } catch (e) { toast(e.message || 'Something went wrong.'); }
+      try { await api(`/api/challenge/${id}`); } catch (e) { toast(e.message); }
       finally { b.classList.remove('busy'); }
     });
   }
-  async function post(path, body) {
-    try { const res = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) }); const data = await res.json(); if (!res.ok) throw Error(data.error); }
-    catch (e) { toast(e.message || 'Something went wrong.'); }
-  }
   if ($('queue-list')) $('queue-list').addEventListener('click', e => {
     const start = e.target.closest('[data-start]'), remove = e.target.closest('[data-remove]');
-    if (start) post(`/api/queue/${start.dataset.start}/start`);
-    if (remove) post(`/api/queue/${remove.dataset.remove}/remove`);
+    const run = path => api(path).catch(err => toast(err.message));
+    if (start) run(`/api/queue/${start.dataset.start}/start`);
+    if (remove) run(`/api/queue/${remove.dataset.remove}/remove`);
   });
-  if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => post('/api/overlay/theme', { theme: e.target.value }));
+  if ($('overlay-theme')) $('overlay-theme').addEventListener('change', e => api('/api/overlay/theme', { theme: e.target.value }).catch(err => toast(err.message)));
   const copy = $('copy');
   if (copy) copy.addEventListener('click', async () => {
     const done = () => { copy.classList.add('ok'); $('copy-text').textContent = 'Copied'; setTimeout(() => { copy.classList.remove('ok'); $('copy-text').textContent = 'Copy command'; }, 1800); };
