@@ -1,1 +1,35 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Challenge Director · OBS Overlay</title><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/style.css"></head><body class="overlay-page"><main class="overlay-wrap"><div class="overlay-brand"><span>✳</span> AI CHALLENGE DIRECTOR <b>● LIVE CHALLENGE</b></div><div class="overlay-main"><section class="overlay-challenge"><div class="overlay-label">THE CHALLENGE <span>✦</span></div><h1 id="overlay-title">Waiting for chat<span>.</span></h1><p id="overlay-description">Suggest the next challenge with !challenge &lt;idea&gt;</p><div class="overlay-meta" id="overlay-meta">YOUR COMMUNITY IS IN CONTROL</div></section><section class="overlay-timer"><span>TIME REMAINING</span><strong id="overlay-time">--:--</strong><small id="overlay-timer-label">AWAITING CHALLENGE</small></section></div><section class="overlay-leaders"><div class="overlay-leader-title"><span>✳</span><div>COMMUNITY<br><b>LEADERBOARD</b></div></div><div id="overlay-leaderboard" class="overlay-leader-list"><span class="overlay-empty">No points awarded yet</span></div></section></main><script src="/socket.io/socket.io.js"></script><script src="/app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Challenge Director · OBS Overlay</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Manrope:wght@500;600;700&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/overlay.css">
+</head>
+<body class="overlay-page">
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<aside class="ov-board" id="ov-board" aria-label="Leaderboard">
+  <div class="ov-board-head"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8l4.5 4L12 5l4.5 7L21 8l-2 11H5z"/></svg><span>Leaderboard</span></div>
+  <div id="overlay-leaderboard" class="ov-list"></div>
+</aside>
+
+<section class="ov-card" id="ov-card" data-state="idle">
+  <div class="ov-ring" id="ov-ring">
+    <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="88"/><circle class="arc" id="ov-arc" cx="100" cy="100" r="88"/></svg>
+    <div class="ov-time"><strong id="overlay-time">--:--</strong><small id="overlay-timer-label">Waiting</small></div>
+  </div>
+  <div class="ov-copy">
+    <span class="ov-tag" id="overlay-meta">Chat is in control</span>
+    <h1 id="overlay-title">Waiting for chat</h1>
+    <p id="overlay-description">Type <b>!challenge</b> and your idea.</p>
+  </div>
+</section>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/app.js"></script>
+</body>
+</html>

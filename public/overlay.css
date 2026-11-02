@@ -1,0 +1,56 @@
+:root{--ink:#f4f4fb;--muted:#b4b4cc;--lime:#d6ff3f;--pink:#ff4fa3;--violet:#8b6bff;--red:#ff5d6c;--amber:#ffb23f;
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;--body:"Manrope","Segoe UI",system-ui,sans-serif;--mono:"JetBrains Mono",ui-monospace,monospace;--ease:cubic-bezier(.2,.8,.2,1)}
+*{box-sizing:border-box}
+/* 1rem = 16px at 1920 wide, so the overlay scales to any browser source size */
+html{font-size:calc(100vw / 120)}
+html,body{margin:0;height:100%;background:transparent;overflow:hidden}
+body{color:var(--ink);font-family:var(--body);position:relative}
+svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#confetti{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9}
+
+/* Challenge card */
+.ov-card{position:absolute;left:3rem;bottom:3rem;width:52rem;display:flex;align-items:center;gap:2.2rem;padding:2rem 2.4rem 2rem 2rem;border-radius:2.2rem;background:linear-gradient(135deg,rgba(14,14,24,.92),rgba(24,20,44,.92));border:.14rem solid rgba(214,255,63,.55);box-shadow:0 2rem 5rem -1rem rgba(0,0,0,.65),0 0 0 .5rem rgba(214,255,63,.07),inset 0 .1rem 0 rgba(255,255,255,.07);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);transition:transform .8s var(--ease),opacity .6s,border-color .4s;transform-origin:left bottom}
+.ov-card[data-state=idle]{width:auto;padding:1.1rem 1.7rem;gap:1rem;border-color:rgba(255,255,255,.18);box-shadow:0 1rem 3rem -1rem rgba(0,0,0,.6)}
+.ov-card[data-state=idle] .ov-ring,.ov-card[data-state=idle] .ov-tag,.ov-card[data-state=idle] h1{display:none}
+.ov-card[data-state=idle] p{margin:0;font-size:1.5rem;color:var(--ink)}
+.ov-card[data-state=idle] p b{color:var(--lime);font-family:var(--mono)}
+.ov-card[data-state=working]{border-color:rgba(139,107,255,.7)}
+.ov-card.enter{animation:cardIn .9s var(--ease)}
+@keyframes cardIn{from{opacity:0;transform:translateX(-6rem) scale(.94)}}
+.ov-card[data-state=over]{border-color:var(--red);animation:alarm .9s infinite}
+@keyframes alarm{50%{box-shadow:0 2rem 5rem -1rem rgba(0,0,0,.65),0 0 0 .9rem rgba(255,93,108,.2)}}
+
+.ov-ring{position:relative;flex:none;width:12rem;height:12rem}
+.ov-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.ov-ring .track{stroke:rgba(255,255,255,.12);stroke-width:11}
+.ov-ring .arc{stroke:var(--lime);stroke-width:11;stroke-dasharray:553;stroke-dashoffset:0;transition:stroke .4s;filter:drop-shadow(0 0 .6rem rgba(214,255,63,.6))}
+.ov-ring.warn .arc{stroke:var(--amber)}
+.ov-ring.crit .arc{stroke:var(--red)}
+.ov-time{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+.ov-time strong{font:700 2.7rem/1 var(--mono);letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.ov-time small{margin-top:.5rem;font:700 .85rem var(--body);letter-spacing:.16em;text-transform:uppercase;color:var(--muted)}
+.ov-ring.crit .ov-time strong{color:var(--red);animation:pulse .6s infinite}
+.ov-ring.over .ov-time strong{color:var(--red);font-size:2.4rem}
+@keyframes pulse{50%{transform:scale(1.1)}}
+
+.ov-copy{min-width:0}
+.ov-tag{display:inline-block;margin-bottom:1rem;padding:.4rem 1rem;border-radius:99rem;background:rgba(255,79,163,.16);border:.1rem solid rgba(255,79,163,.5);color:#ff9bcb;font:700 1.05rem var(--body);letter-spacing:.08em;text-transform:uppercase}
+.ov-copy h1{margin:0;font:800 3.5rem/1 var(--display);letter-spacing:-.04em;text-wrap:balance;overflow-wrap:anywhere}
+.ov-copy p{margin:.9rem 0 0;font-size:1.6rem;line-height:1.35;color:var(--muted);overflow-wrap:anywhere}
+
+/* Leaderboard */
+.ov-board{position:absolute;top:3rem;right:3rem;width:24rem;padding:1.4rem 1.5rem;border-radius:2rem;background:rgba(14,14,24,.86);border:.1rem solid rgba(255,255,255,.14);box-shadow:0 1.6rem 4rem -1rem rgba(0,0,0,.6);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);animation:boardIn .9s var(--ease) .2s both}
+@keyframes boardIn{from{opacity:0;transform:translateX(5rem)}}
+.ov-board-head{display:flex;align-items:center;gap:.7rem;margin-bottom:1rem;font:800 1.25rem var(--display);letter-spacing:.06em;text-transform:uppercase;color:var(--lime)}
+.ov-board-head svg{width:1.6rem;height:1.6rem;fill:currentColor;stroke:none}
+.ov-list{display:flex;flex-direction:column;gap:.55rem}
+.ov-row{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;align-items:center;gap:.8rem;padding:.65rem .9rem;border-radius:1.1rem;background:rgba(255,255,255,.06);animation:rowIn .6s var(--ease) both}
+@keyframes rowIn{from{opacity:0;transform:translateX(2rem)}}
+.ov-row:first-child{background:rgba(214,255,63,.15);border:.1rem solid rgba(214,255,63,.4)}
+.ov-row.bump{background:rgba(214,255,63,.3)}
+.ov-row .n{font:700 1.1rem var(--mono);color:var(--lime)}
+.ov-row strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1.35rem}
+.ov-row b{font:700 1.35rem var(--mono)}
+.ov-row b small{font:700 .75rem var(--body);color:var(--muted);margin-left:.2rem}
+.ov-empty{font-size:1.2rem;color:var(--muted)}
+.ov-board.hidden{display:none}
