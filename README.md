@@ -39,4 +39,4 @@ This hackathon build has no user accounts or login. Anyone who can reach the das
 
 ## Credits
 
-The flowing background clip is a free stock video from [Mixkit](https://mixkit.co/free-stock-video/orange-fabric-flowing-slowly-282/), used under the [Mixkit License](https://mixkit.co/license/#videoFree).
+The flowing background clip is a free stock video from [Mixkit](https://mixkit.co/free-stock-video/abstract-red-fabric-flowing-282/), used under the [Mixkit License](https://mixkit.co/license/#videoFree).
