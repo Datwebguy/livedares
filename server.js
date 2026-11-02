@@ -10,6 +10,7 @@ const { createChatHandler } = require('./lib/chat');
 const { createSuggestionHandler } = require('./lib/suggest');
 const { createAutoStart } = require('./lib/auto-start');
 const { createTwitchContext } = require('./lib/twitch-context');
+const { createClientIp } = require('./lib/client-ip');
 
 const channel = process.env.TWITCH_CHANNEL?.replace(/^#/, '').trim() || '';
 const store = createStore(process.env.DATABASE_PATH || path.join(__dirname, 'data', 'challenges.sqlite'), { channel });
@@ -30,8 +31,7 @@ async function refreshPlaying() { const next = await twitchContext.get(); if (JS
 refreshPlaying(); const contextTimer = setInterval(refreshPlaying, 60000); contextTimer.unref();
 
 app.disable('x-powered-by');
-// Railway terminates TLS at its trusted ingress; use the client address for rate limiting.
-if (process.env.RAILWAY_ENVIRONMENT) app.set('trust proxy', 1);
+const clientIp = createClientIp();
 app.use((_req, res, next) => { res.set({ 'X-Content-Type-Options': 'nosniff', 'Referrer-Policy': 'same-origin' }); next(); });
 app.use(express.json({ limit: '4kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -40,7 +40,7 @@ app.get('/overlay', (_req, res) => res.sendFile(path.join(__dirname, 'public', '
 app.get('/healthz', (_req, res) => res.json({ ok: true }));
 app.get('/api/state', (_req, res) => res.json(publicState()));
 
-app.post('/api/suggest', createSuggestionHandler({ director }));
+app.post('/api/suggest', createSuggestionHandler({ director, clientIp }));
 app.post('/api/challenge/:action', (req, res) => {
   if (!['done', 'fail', 'clear'].includes(req.params.action)) return res.status(404).json({ error: 'Unknown action.' });
   if (!store.resolve(req.params.action)) return res.status(409).json({ error: 'There is no active challenge.' });
